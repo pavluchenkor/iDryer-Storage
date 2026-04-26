@@ -1,0 +1,160 @@
+# ===========================================
+# iHeater Link menu
+# Source of truth for generated menu files.
+# IMPORTANT:
+# - units_count must stay second from the end
+# - language must stay last
+# ===========================================
+
+- id: root
+  type: submenu
+  title: { ru: "IHEATER LINK", en: "IHEATER LINK" }
+  children:
+    - id: portal
+      type: submenu
+      title: { ru: "ПОРТАЛ", en: "PORTAL" }
+      children:
+        - id: start_claim
+          type: action
+          title: { ru: "СВЯЗАТЬ", en: "CLAIM" }
+          on_invoke: start_claim
+
+    - id: connections
+      type: submenu
+      title: { ru: "ПОДКЛЮЧЕНИЯ", en: "CONNECTIONS" }
+      children:
+        # Только один из трёх может быть активным одновременно —
+        # эксклюзивность обеспечивает MenuBridge::applySetCommand
+        # (сбрасывает остальные _en при включении одного).
+        - id: bambu_enabled
+          type: toggle
+          title: { ru: "BAMBU", en: "BAMBU" }
+          vtype: bool
+          bind: bambu_en
+          persist: true
+          scope: global
+          default: false
+
+        - id: moon_enabled
+          type: toggle
+          title: { ru: "MOONRAKER", en: "MOONRAKER" }
+          vtype: bool
+          bind: moon_en
+          persist: true
+          scope: global
+          default: false
+
+        - id: ha_enabled
+          type: toggle
+          title: { ru: "HOME ASSISTANT", en: "HOME ASSISTANT" }
+          vtype: bool
+          bind: ha_en
+          persist: true
+          scope: global
+          default: false
+
+    - id: materials
+      type: submenu
+      title: { ru: "МАТЕРИАЛЫ", en: "MATERIALS" }
+      children:
+        - id: iheater_link_pla_temp
+          type: value
+          title: { ru: "PLA", en: "PLA" }
+          unit: { ru: "°C", en: "°C" }
+          vtype: float
+          min: 30
+          max: 90
+          step: 1
+          bind: mat_pla
+          persist: true
+          scope: global
+          default: 45.0
+
+        - id: iheater_link_petg_temp
+          type: value
+          title: { ru: "PETG", en: "PETG" }
+          unit: { ru: "°C", en: "°C" }
+          vtype: float
+          min: 30
+          max: 90
+          step: 1
+          bind: mat_petg
+          persist: true
+          scope: global
+          default: 50.0
+
+        - id: iheater_link_abs_temp
+          type: value
+          title: { ru: "ABS", en: "ABS" }
+          unit: { ru: "°C", en: "°C" }
+          vtype: float
+          min: 30
+          max: 90
+          step: 1
+          bind: mat_abs
+          persist: true
+          scope: global
+          default: 60.0
+
+        - id: iheater_link_asa_temp
+          type: value
+          title: { ru: "ASA", en: "ASA" }
+          unit: { ru: "°C", en: "°C" }
+          vtype: float
+          min: 30
+          max: 90
+          step: 1
+          bind: mat_asa
+          persist: true
+          scope: global
+          default: 65.0
+
+        - id: iheater_link_pc_temp
+          type: value
+          title: { ru: "PC", en: "PC" }
+          unit: { ru: "°C", en: "°C" }
+          vtype: float
+          min: 30
+          max: 90
+          step: 1
+          bind: mat_pc
+          persist: true
+          scope: global
+          default: 70.0
+
+        - id: iheater_link_pa_temp
+          type: value
+          title: { ru: "PA / NYLON", en: "PA / NYLON" }
+          unit: { ru: "°C", en: "°C" }
+          vtype: float
+          min: 30
+          max: 90
+          step: 1
+          bind: mat_pa
+          persist: true
+          scope: global
+          default: 70.0
+
+    - id: units_count
+      type: value
+      title: { ru: "КОЛ-ВО ЮНИТОВ", en: "UNITS" }
+      vtype: uint8
+      min: 1
+      max: 1
+      step: 1
+      bind: units_count
+      persist: true
+      scope: global
+      default: 1
+
+    - id: language
+      type: value
+      title: { ru: "ЯЗЫК", en: "LANGUAGE" }
+      vtype: uint8
+      min: 0
+      max: 1
+      step: 1
+      bind: language
+      persist: true
+      scope: global
+      default: 1

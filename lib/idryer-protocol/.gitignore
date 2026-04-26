@@ -1,0 +1,28 @@
+_private_*
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# Build artifacts
+*.o
+*.a
+*.elf
+*.bin
+*.hex
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Examples build
+examples/*/build/
+examples/*/.pio/
+docs/TRANSLATION_GLOSSARY.md
