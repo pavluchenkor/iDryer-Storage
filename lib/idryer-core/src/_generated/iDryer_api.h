@@ -29,8 +29,8 @@ enum class UnitMode : uint8_t {
 };
 
 /// Product device family — set in Config and reflected in info.deviceType.
-/// Subset of yaml.enums.UartDeviceType (UART-only node types like Telemetry/Link
-/// are filtered out — they are wire-level, not facade-level).
+/// Mapping yaml.enums.UartDeviceType → facade DeviceType (см. gen_idryer_api_h.py).
+/// 'Link' (0x04) на проводе → StorageLink в фасаде (продуктовое имя).
 enum class DeviceType : uint8_t {
     Unknown = 0,
     Dryer = 1,

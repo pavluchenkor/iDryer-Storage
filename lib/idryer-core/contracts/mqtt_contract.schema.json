@@ -266,6 +266,7 @@
       "additionalProperties": false,
       "properties": {
         "core": { "type": "array", "items": { "$ref": "#/$defs/InvokeAction" } },
+        "storage_link": { "type": "array", "items": { "$ref": "#/$defs/InvokeAction" } },
         "iheater_link": { "type": "array", "items": { "$ref": "#/$defs/InvokeAction" } },
         "idryer_link": { "type": "array", "items": { "$ref": "#/$defs/InvokeAction" } },
         "rp2040": { "type": "array", "items": { "$ref": "#/$defs/InvokeAction" } }

@@ -6,28 +6,35 @@
 
 #include <Arduino.h>
 #include <FastLED.h>
+#include <string.h>
 
 namespace {
 
-// Тип анимации, синхронизированный с selectedAnimation() из led_strip_menu.cpp.
-enum class Anim : uint8_t { Solid = 0, Breathe = 1, Wave = 2, Rainbow = 3 };
-
 // ── State ────────────────────────────────────────────────────────────
-LedStripExecutor* g_exec    = nullptr;
-bool              g_enabled = false;
-Anim              g_anim    = Anim::Solid;
-CRGB              g_color   = CRGB::White;
+LedStripExecutor* g_exec = nullptr;
+
+// «Эффективное» состояние что рендерится прямо сейчас.
+// При активном override — копия override. Иначе — копия menu.
+bool      g_enabled = false;
+AnimKind  g_anim    = AnimKind::Solid;
+CRGB      g_color   = CRGB::White;
+
+// Override-state (RAM, не persist). Применяется поверх menu, пока g_overrideActive.
+bool      g_overrideActive  = false;
+bool      g_overrideEnabled = false;
+AnimKind  g_overrideAnim    = AnimKind::Solid;
+CRGB      g_overrideColor   = CRGB::White;
 
 // Render state.
-uint32_t  g_lastFrameMs   = 0;
-uint32_t  g_animStartMs   = 0;        // момент начала текущей анимации (для phase)
+uint32_t  g_lastFrameMs = 0;
+uint32_t  g_animStartMs = 0;        // момент начала текущей анимации (для phase)
 constexpr uint32_t kFrameIntervalMs = 33;   // ~30 fps
 
 // Smooth crossfade при смене настроек: каждый кадр nblend от текущего к target.
-// 8/255 ≈ ~32 кадра до полного слияния, что даёт ~500 мс при 30 fps.
+// 32/255 ≈ ~32 кадра до полного слияния, что даёт ~500 мс при 30 fps.
 constexpr fract8 kBlendStep = 32;
 
-// Параметры анимаций (захардкожены, как договорились).
+// Параметры анимаций (захардкожены).
 constexpr uint32_t kBreathePeriodMs   = 4000;   // 4 сек период дыхания
 constexpr float    kBreatheMin        = 0.20f;  // 20% min яркости
 constexpr float    kBreatheMax        = 1.00f;  // 100% max
@@ -35,12 +42,33 @@ constexpr uint32_t kWaveSpeedLedPerS  = 30;     // 30 LED/сек
 constexpr uint8_t  kWaveTailLen       = 6;      // длина хвоста кометы
 constexpr uint32_t kRainbowPeriodMs   = 10000;  // 10 сек на полный круг
 
-// Сигнатура изменения состояния — чтобы решить, нужна ли смена animStartMs.
+// Сигнатура для определения «состояние сменилось» — нужно перезапустить фазу.
 struct StateSig { bool enabled; uint8_t anim; uint32_t color; };
 StateSig g_lastSig = { false, 0, 0 };
 
 uint32_t crgbKey(const CRGB& c) {
     return ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.b;
+}
+
+// Применить g_enabled/g_anim/g_color из текущего эффективного источника
+// (override приоритетнее menu). Перезапустить фазу если состояние сменилось.
+void recomputeEffective() {
+    if (g_overrideActive) {
+        g_enabled = g_overrideEnabled;
+        g_anim    = g_overrideAnim;
+        g_color   = g_overrideColor;
+    } else {
+        g_enabled = isIdleEnabled();
+        g_anim    = (AnimKind)selectedAnimation();
+        g_color   = selectedIdleColor();
+    }
+    StateSig sig = { g_enabled, (uint8_t)g_anim, crgbKey(g_color) };
+    if (sig.enabled != g_lastSig.enabled ||
+        sig.anim    != g_lastSig.anim    ||
+        sig.color   != g_lastSig.color) {
+        g_animStartMs = millis();
+        g_lastSig     = sig;
+    }
 }
 
 // ── Renderers ───────────────────────────────────────────────────────
@@ -62,13 +90,11 @@ void renderBreathe(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB color) {
 }
 
 void renderWave(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB color) {
-    // Положение «головы» кометы вдоль ленты (модуль ledsCount).
     uint32_t pos = ((uint64_t)phaseMs * kWaveSpeedLedPerS / 1000u) % (uint32_t)n;
     fill_solid(dst, n, CRGB::Black);
     for (uint8_t t = 0; t < kWaveTailLen; t++) {
         int32_t idx = (int32_t)pos - (int32_t)t;
         if (idx < 0) idx += n;
-        // Затухание: голова на 100%, хвост линейно к 0.
         uint8_t scale = (uint8_t)(255 - (255 * t / kWaveTailLen));
         CRGB c = color;
         c.nscale8_video(scale);
@@ -81,33 +107,96 @@ void renderRainbow(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB /*color*/) {
     fill_rainbow(dst, n, hueOffset, 256 / (n > 0 ? n : 1));
 }
 
+// Twinkle — спокойная анимация: фон базовым цветом на низкой яркости (~10%),
+// плюс редкие случайные яркие вспышки отдельных LED'ов с медленным fade.
+// Состояние per-LED — массив времени последней вспышки. Проверяем все LED'ы
+// каждый кадр; шансы малы → одновременно горит несколько штук.
+//
+// Параметры:
+//   kTwinkleBaseScale — яркость базового цвета на «спящих» LED'ах.
+//   kTwinkleSpawnThr  — порог вероятности вспышки в parts-of-65536:
+//                       random16() < threshold → spawn.
+//                       100/65536 ≈ 0.15% / LED / frame → на ленте 100 LED
+//                       ~5 новых вспышек/сек при 30 fps.
+//   kTwinkleFadeMs    — длительность fade-out от пика до базового уровня.
+constexpr uint8_t  kTwinkleBaseScale = 26;     // ~10% яркости (26/255)
+constexpr uint16_t kTwinkleSpawnThr  = 100;    // ~0.15% / LED / frame
+constexpr uint32_t kTwinkleFadeMs    = 1200;   // fade длится 1.2 сек
+
+uint32_t g_twinkleStartMs[300] = {0};   // STORAGE_MAX_LEDS — TODO унификация
+
+void renderTwinkle(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB color) {
+    // Шумоподобный rand для решения «зажечь ли этот LED в этом кадре».
+    // FastLED.random16() — fast, ок для визуала.
+    CRGB base = color;
+    base.nscale8_video(kTwinkleBaseScale);
+
+    for (uint16_t i = 0; i < n; i++) {
+        // Решение spawn'а — только если этот LED сейчас в покое (или fade завершён).
+        bool inFade = g_twinkleStartMs[i] != 0 &&
+                      (phaseMs - g_twinkleStartMs[i]) < kTwinkleFadeMs;
+        if (!inFade) {
+            if (random16() < kTwinkleSpawnThr) {
+                g_twinkleStartMs[i] = phaseMs == 0 ? 1 : phaseMs;
+                inFade = true;
+            }
+        }
+
+        if (inFade) {
+            uint32_t age = phaseMs - g_twinkleStartMs[i];
+            // Линейный fade от 255 (пик) до kTwinkleBaseScale (база) за kTwinkleFadeMs.
+            uint8_t scale = 255 - (uint8_t)((255 - kTwinkleBaseScale) * age / kTwinkleFadeMs);
+            CRGB c = color;
+            c.nscale8_video(scale);
+            dst[i] = c;
+            if (age >= kTwinkleFadeMs) g_twinkleStartMs[i] = 0;  // fade завершён
+        } else {
+            dst[i] = base;
+        }
+    }
+}
+
 } // namespace
 
 // ── Public API ──────────────────────────────────────────────────────
+
+bool parseAnimationName(const char* name, AnimKind& out) {
+    if (!name) return false;
+    if (strcmp(name, "solid")   == 0) { out = AnimKind::Solid;   return true; }
+    if (strcmp(name, "breathe") == 0) { out = AnimKind::Breathe; return true; }
+    if (strcmp(name, "wave")    == 0) { out = AnimKind::Wave;    return true; }
+    if (strcmp(name, "rainbow") == 0) { out = AnimKind::Rainbow; return true; }
+    if (strcmp(name, "twinkle") == 0) { out = AnimKind::Twinkle; return true; }
+    return false;
+}
 
 void animationsWire(LedStripExecutor* exec) {
     g_exec = exec;
 }
 
 void animationsApply() {
-    g_enabled = isIdleEnabled();
-    g_anim    = (Anim)selectedAnimation();
-    g_color   = selectedIdleColor();
+    // Любой menu-update снимает invoke-override (контракт).
+    g_overrideActive = false;
+    recomputeEffective();
+}
 
-    StateSig sig = { g_enabled, (uint8_t)g_anim, crgbKey(g_color) };
-    bool changed = (sig.enabled != g_lastSig.enabled) ||
-                   (sig.anim    != g_lastSig.anim) ||
-                   (sig.color   != g_lastSig.color);
-    if (changed) {
-        g_animStartMs = millis();          // перезапустить фазу анимации
-        g_lastSig     = sig;
-    }
+void animationsOverride(bool enabled, AnimKind anim, const CRGB& color) {
+    g_overrideActive  = true;
+    g_overrideEnabled = enabled;
+    g_overrideAnim    = anim;
+    g_overrideColor   = color;
+    recomputeEffective();
+}
+
+void animationsClearOverride() {
+    g_overrideActive = false;
+    recomputeEffective();
 }
 
 void animationsLoop(uint32_t nowMs) {
     if (!g_exec) return;
 
-    // Pulse имеет приоритет — пока активен, не трогаем ленту.
+    // Pulse-зона имеет приоритет — пока активна, не трогаем ленту.
     if (g_exec->isPulseActive()) {
         g_lastFrameMs = 0;                 // при возврате в idle сразу нарисуем
         return;
@@ -121,7 +210,6 @@ void animationsLoop(uint32_t nowMs) {
     uint16_t n    = g_exec->ledsCount();
     if (!leds || n == 0) return;
 
-    // Если анимация выключена — целевая чёрная (плавно гаснем).
     static CRGB target[300];               // STORAGE_MAX_LEDS — TODO унификация
     if (n > 300) n = 300;
 
@@ -130,10 +218,11 @@ void animationsLoop(uint32_t nowMs) {
     } else {
         const uint32_t phase = nowMs - g_animStartMs;
         switch (g_anim) {
-            case Anim::Solid:   renderSolid(target,   n, phase, g_color); break;
-            case Anim::Breathe: renderBreathe(target, n, phase, g_color); break;
-            case Anim::Wave:    renderWave(target,    n, phase, g_color); break;
-            case Anim::Rainbow: renderRainbow(target, n, phase, g_color); break;
+            case AnimKind::Solid:   renderSolid(target,   n, phase, g_color); break;
+            case AnimKind::Breathe: renderBreathe(target, n, phase, g_color); break;
+            case AnimKind::Wave:    renderWave(target,    n, phase, g_color); break;
+            case AnimKind::Rainbow: renderRainbow(target, n, phase, g_color); break;
+            case AnimKind::Twinkle: renderTwinkle(target, n, phase, g_color); break;
         }
     }
 

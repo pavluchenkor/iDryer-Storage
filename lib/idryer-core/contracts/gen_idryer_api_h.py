@@ -96,21 +96,34 @@ def render_unit_mode_enum(_doc: dict) -> list[str]:
 
 
 def render_device_type_enum(doc: dict) -> list[str]:
-    """DeviceType — facade-level product types. Filtered subset of yaml.enums.UartDeviceType
-    (UART-internal node types like Telemetry/Link are not relevant for the facade)."""
-    PRODUCT_TYPES = {"Unknown", "Dryer", "Heater", "IHeaterLink"}
+    """DeviceType — facade-level product types. Subset/rename of yaml.enums.UartDeviceType.
+
+    Wire-уровень (UART/info.deviceType) у нас более общий: 'Link' = любое ESP-only
+    устройство без UART-MCU. На facade-уровне продукт идентифицируется конкретно
+    (StorageLink, ...), поэтому здесь делаем mapping yaml-name → facade-name.
+
+    Telemetry — wire-only тип (UART-нода-телеметрист), в фасадном enum не нужен.
+    """
+    # yaml-name → facade-name. Включай новые продукты добавлением сюда строки.
+    PRODUCT_RENAME = {
+        "Unknown":     "Unknown",
+        "Dryer":       "Dryer",
+        "Heater":      "Heater",
+        "Link":        "StorageLink",   # wire 'Link' (0x04) → facade 'StorageLink'
+        "IHeaterLink": "IHeaterLink",
+    }
 
     enums = (doc.get("enums") or {})
     udt = enums.get("UartDeviceType")
     if not udt:
         return ["// (UartDeviceType not found in yaml)"]
     items = list(udt.items()) if isinstance(udt, dict) else [(v, i) for i, v in enumerate(udt)]
-    items = [(n, v) for n, v in items if n in PRODUCT_TYPES]
+    items = [(PRODUCT_RENAME[n], v) for n, v in items if n in PRODUCT_RENAME]
     items.sort(key=lambda kv: kv[1] if isinstance(kv[1], int) else 0)
     out = [
         "/// Product device family — set in Config and reflected in info.deviceType.",
-        "/// Subset of yaml.enums.UartDeviceType (UART-only node types like Telemetry/Link",
-        "/// are filtered out — they are wire-level, not facade-level).",
+        "/// Mapping yaml.enums.UartDeviceType → facade DeviceType (см. gen_idryer_api_h.py).",
+        "/// 'Link' (0x04) на проводе → StorageLink в фасаде (продуктовое имя).",
         "enum class DeviceType : uint8_t {",
     ]
     for name, val in items:
