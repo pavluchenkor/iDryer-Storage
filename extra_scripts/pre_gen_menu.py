@@ -1,33 +1,34 @@
 """
-Pre-build hook: автогенерация меню из menu.yaml.
+Pre-build hook: автогенерация меню из src/menu/menu.yaml.
 
 Что делает:
-  Запускает lib/idryer-core/tools/menu_gen.py с menu.yaml продукта,
-  кладёт сгенерированные .h/.cpp в src/menu/. PlatformIO потом сам
-  скомпилирует всё что в src/.
+  Запускает lib/idryer-core/menu/menu_gen.py с src/menu/menu.yaml продукта,
+  кладёт сгенерированные .h/.cpp туда же — в src/menu/. PlatformIO потом
+  сам компилирует всё из src/.
 
 Когда срабатывает:
-  Перед каждым `pio run` (PIO зовёт pre-extra_scripts автоматически).
-  Делает mtime-check: если menu.yaml не новее src/menu/* — пропускает.
-  Поэтому на повторных сборках без правки yaml — не тратит время.
-
-Что нужно подключить:
-  В platformio.ini:
-      [env]
-      extra_scripts =
-        pre:extra_scripts/pre_gen_menu.py
-        post:extra_scripts/copy_firmware.py    ; уже есть для prod
-
-Ручное использование (без PIO):
-  python3 lib/idryer-core/tools/menu_gen.py menu.yaml --out src/menu --num-units 1
-
-Принудительная регенерация:
-  rm -rf src/menu && pio run
+  Перед каждым `pio run`. Mtime-check: если menu.yaml не новее src/menu/*.cpp —
+  пропускает. Поэтому повторные сборки без правки yaml не тратят время.
 
 Где что лежит:
-  menu.yaml                            ← source of truth (правит разработчик)
-  lib/idryer-core/tools/menu_gen.py    ← общий генератор (часть core)
-  src/menu/                            ← сгенерированный C++ (НЕ редактировать)
+  src/menu/menu.yaml                    ← source of truth (правит разработчик)
+  src/menu/menu_*.{h,cpp}               ← autogen (НЕ редактировать)
+  src/menu/menu_commands.{h,cpp}        ← runtime helper (hand-written)
+  lib/idryer-core/menu/menu_gen.py      ← общий генератор (часть core)
+  lib/idryer-core/menu/menu.template.yaml  ← шаблон для нового продукта
+
+Подключение в platformio.ini:
+  [env:my-device]
+  build_flags = -Isrc/menu
+  extra_scripts =
+    pre:extra_scripts/pre_gen_menu.py
+    post:extra_scripts/copy_firmware.py
+
+Ручное использование (без PIO):
+  python3 lib/idryer-core/menu/menu_gen.py src/menu/menu.yaml --out src/menu --num-units 1
+
+Принудительная регенерация:
+  touch src/menu/menu.yaml && pio run
 """
 
 import os
@@ -38,9 +39,10 @@ from pathlib import Path
 Import("env")
 
 PROJECT_DIR = Path(env["PROJECT_DIR"])
-YAML_PATH   = PROJECT_DIR / "menu.yaml"
 OUT_DIR     = PROJECT_DIR / "src" / "menu"
-GEN_PATH    = PROJECT_DIR / "lib" / "idryer-core" / "tools" / "menu_gen.py"
+YAML_PATH   = OUT_DIR / "menu.yaml"
+GEN_PATH    = PROJECT_DIR / "lib" / "idryer-core" / "menu" / "menu_gen.py"
+TEMPLATE_PATH = PROJECT_DIR / "lib" / "idryer-core" / "menu" / "menu.template.yaml"
 
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -77,7 +79,10 @@ def _needs_regen() -> bool:
 
 def _run() -> None:
     if not YAML_PATH.exists():
-        print(f"  {YELLOW}[menu_gen] no menu.yaml in project root — skipped{RESET}")
+        print(f"  {YELLOW}[menu_gen] src/menu/menu.yaml не найден — генерация пропущена{RESET}")
+        if TEMPLATE_PATH.exists():
+            print(f"  {YELLOW}[menu_gen] стартовый шаблон: {TEMPLATE_PATH.relative_to(PROJECT_DIR)}{RESET}")
+            print(f"  {YELLOW}[menu_gen] cp {TEMPLATE_PATH.relative_to(PROJECT_DIR)} src/menu/menu.yaml{RESET}")
         return
     if not GEN_PATH.exists():
         print(f"  {RED}[menu_gen] generator not found: {GEN_PATH}{RESET}")
