@@ -22,6 +22,7 @@
 // Меню v3: сгенерированные артефакты из lib/idryer-menu (yaml → C++).
 #include <menu_state.h>
 #include <menu_ids.h>
+#include <menu_bindings.h>     // menu_sync_state_to_cache
 #include <menu_commands.h>     // menu_buildFullJson, MENU_FULL_JSON_BUF_SIZE
 #include <menu_nvs_io.h>       // menu_nvs_begin, NVS_KEY_*
 
@@ -148,6 +149,9 @@ static void bootstrapMenu() {
     }
     menu.loadFromNVS();
     normalizeMenuGroups();
+    // Bootstrap sync MenuState→g_menu_cache. Без этого первый commands/get_config
+    // отдаст дефолтные значения вместо реально загруженных из NVS.
+    menu_sync_state_to_cache();
 }
 
 // ── После любого изменения меню — синхронизировать executor + animations ──

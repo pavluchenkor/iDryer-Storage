@@ -44,3 +44,9 @@ void menu_set_config_change_hook(ConfigChangeHookFn hook);
 bool menu_apply_by_bind(const char* bind, float v);
 bool menu_read_by_bind(const char* bind, void* out_value);
 const MenuBinding* menu_find_bind(const char* bind);
+
+// Bootstrap sync: проходит по всем биндингам и записывает текущие
+// значения MenuState в g_menu_cache. Вызывать один раз на boot
+// ПОСЛЕ menu.loadFromNVS() — иначе menu_buildFullJson() отдаст
+// дефолтные значения (cache живёт отдельно от MenuState).
+void menu_sync_state_to_cache();

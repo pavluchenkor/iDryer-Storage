@@ -150,3 +150,35 @@ bool menu_apply_by_bind(const char* bind, float v) {
   if (g_config_change_hook) g_config_change_hook(b->id, idx, b->bind);
   return true;
 }
+
+void menu_sync_state_to_cache() {
+  for (uint16_t i = 0; i < g_bindings_count; i++) {
+    const MenuBinding& b = g_bindings[i];
+    if (b.scope == SCOPE_GLOBAL) {
+      float v = 0.0f;
+      switch (b.vtype) {
+        case VT_F32:  v = *(const float*)b.ptr; break;
+        case VT_U16:  v = (float)*(const uint16_t*)b.ptr; break;
+        case VT_U8:   v = (float)*(const uint8_t*)b.ptr; break;
+        case VT_I32:  v = (float)*(const int32_t*)b.ptr; break;
+        case VT_BOOL: v = (*(const bool*)b.ptr) ? 1.0f : 0.0f; break;
+        case VT_U32:  v = (float)*(const uint32_t*)b.ptr; break;
+      }
+      g_menu_cache.setFloat(b.id, v, 0);
+    } else {
+      // per_controller: копируем NUM_UNITS значений.
+      for (uint8_t u = 0; u < MENU_MAX_UNITS; u++) {
+        float v = 0.0f;
+        switch (b.vtype) {
+          case VT_F32:  v = ((const float*)b.ptr)[u]; break;
+          case VT_U16:  v = (float)((const uint16_t*)b.ptr)[u]; break;
+          case VT_U8:   v = (float)((const uint8_t*)b.ptr)[u]; break;
+          case VT_I32:  v = (float)((const int32_t*)b.ptr)[u]; break;
+          case VT_BOOL: v = ((const bool*)b.ptr)[u] ? 1.0f : 0.0f; break;
+          case VT_U32:  v = (float)((const uint32_t*)b.ptr)[u]; break;
+        }
+        g_menu_cache.setFloat(b.id, v, u);
+      }
+    }
+  }
+}
