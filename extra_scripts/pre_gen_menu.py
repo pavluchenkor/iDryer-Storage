@@ -66,15 +66,16 @@ def _ensure_pyyaml() -> None:
 
 
 def _needs_regen() -> bool:
-    """True если menu.yaml новее любого файла в src/menu/, или src/menu пустой."""
-    if not OUT_DIR.exists():
+    """True если menu.yaml новее autogen-маркера, или маркер отсутствует.
+
+    Сравниваем только с одним autogen-файлом (menu_state.cpp), а не с min(*) по
+    всей папке — иначе hand-written menu_commands.{h,cpp} с их git-mtime ронят
+    проверку и заставляют регенерировать каждую сборку.
+    """
+    marker = OUT_DIR / "menu_state.cpp"
+    if not marker.exists():
         return True
-    cpp_files = list(OUT_DIR.glob("*.cpp"))
-    if not cpp_files:
-        return True
-    yaml_mtime = YAML_PATH.stat().st_mtime
-    oldest_gen = min(f.stat().st_mtime for f in OUT_DIR.glob("*") if f.is_file())
-    return yaml_mtime > oldest_gen
+    return YAML_PATH.stat().st_mtime > marker.stat().st_mtime
 
 
 def _run() -> None:
