@@ -1,289 +1,267 @@
-/**
- * @file main.cpp
- * @brief Главный файл iHeater Link (ESP32-C3)
- *
- * iHeater Link — ESP32 без UART-компаньона. Обеспечивает:
- * - WiFi (через Improv Wi-Fi по Serial)
- * - MQTT с backend iDryer
- * - Claim (через WebSerial install.idryer.org)
- * - Локальное применение команд портала на pulse output (STM32 iHeater)
- * - Интеграцию с Bambu Lab (local MQTT) для автоматики нагрева
- */
+// iDryer Storage Link — main.cpp.
+//
+// Тонкий composition root через iDryer::Link фасад. Образцовый Arduino-style
+// пример простого устройства линейки iDryer:
+//   • один unit;
+//   • actuator   — адресная LED-лента (1-wire chipsets: WS2812B/WS2811/
+//                  WS2813/WS2815/SK6812-RGB) + фоновые анимации;
+//   • sensor     — опциональный SHT31 (температура + влажность);
+//   • меню       — генерируется из lib/idryer-menu/menu_v2.yaml;
+//   • облако     — WiFi → MQTT → portal через iDryer::Link;
+//   • LAN-app    — WebSocket-клиент видит то же что и облако (один publish на оба).
 
 #include <Arduino.h>
-#include <idryer_protocol.h>
-#include <platform/arduino/idryer_arduino.h>
+#include <Wire.h>
+#include <FastLED.h>
 #include <ArduinoJson.h>
-#include <ImprovWiFiLibrary.h>
-#include <Preferences.h>
-#include <ESPmDNS.h>
 
-#include <menu_commands.h>
-#include <menu_cache.h>
-#include <menu_meta.h>
+#include <iDryer.h>
+#include <local_access/device_publisher.h>
+#include <runtime/idryer_runtime.h>
 
-#include "iheater/HeaterDevice.h"
-#include "secrets.h"
-#include "version.h"
+// Меню v3: сгенерированные артефакты из lib/idryer-menu (yaml → C++).
+#include <menu_state.h>
+#include <menu_ids.h>
+#include <menu_commands.h>     // menu_buildFullJson, MENU_FULL_JSON_BUF_SIZE
+#include <menu_nvs_io.h>       // menu_nvs_begin, NVS_KEY_*
 
-using namespace idryer;
-using namespace idryer::hal;
+#include "storage/led_strip/led_strip_executor.h"
+#include "storage/led_strip/led_strip_menu.h"
+#include "storage/led_strip/led_strip_animations.h"
+#include "storage/sensors/Sht31ClimateSensor.h"
 
-#define ANSI_RESET "\033[0m"
-#define ANSI_GREEN "\033[32m"
-
-#define DEBUG_LOG(...)                  \
-    do                                  \
-    {                                   \
-        if (logsEnabled)                \
-            Serial.printf(__VA_ARGS__); \
-    } while (0)
-
-namespace
-{
-    // Improv Wi-Fi
-    Preferences preferences;
-    ImprovWiFi improvSerial(&Serial);
-    bool wifiConfigured = false;
-    bool logsEnabled = false; // Wi-Fi уже подключён и Serial отдан под логи
-
-    // Сохранить SSID/пароль в NVS (Preferences namespace "wifi").
-    void saveWiFiCredentials(const char *ssid, const char *password)
-    {
-        preferences.begin("wifi", false);
-        preferences.putString("ssid", ssid);
-        preferences.putString("password", password);
-        preferences.putBool("configured", true);
-        preferences.end();
-        DEBUG_LOG("[IMPROV] WiFi credentials saved\n");
-    }
-
-    // Прочитать SSID/пароль из NVS. Возвращает false если ничего не сохранено.
-    bool loadWiFiCredentials(String &ssid, String &password)
-    {
-        preferences.begin("wifi", true);
-        bool configured = preferences.getBool("configured", false);
-        if (configured)
-        {
-            ssid = preferences.getString("ssid", "");
-            password = preferences.getString("password", "");
-        }
-        preferences.end();
-        return configured && ssid.length() > 0;
-    }
-
-    // =============================================================================
-    // ГЛОБАЛЬНЫЕ ОБЪЕКТЫ
-    // =============================================================================
-
-    ArduinoWifiManager wifiManager;
-    ArduinoHttpClient httpClient;
-    ArduinoCredentialStore credStore;
-
-    iheaterlink::HeaterDevice device(&wifiManager, &httpClient, &credStore, IDRYER_API_BASE);
-
-    // Improv: пользователь ввёл credentials — сохранить в NVS и поднять Wi-Fi.
-    void onImprovWiFiConnectCallback(const char *ssid, const char *password)
-    {
-        DEBUG_LOG("[IMPROV] Received credentials - SSID: %s\n", ssid);
-        saveWiFiCredentials(ssid, password);
-        wifiManager.begin(ssid, password);
-        wifiConfigured = true;
-    }
-
-    // Improv: ошибка при настройке Wi-Fi — только лог.
-    void onImprovWiFiErrorCallback(ImprovTypes::Error err)
-    {
-        DEBUG_LOG("[IMPROV] Error: %d\n", err);
-    }
-
-    // =============================================================================
-    // WEBSERIAL CLAIMING
-    // =============================================================================
-
-    char currentClaimPin[10] = "";
-    uint32_t claimPinExpiresIn = 0;
-
-    // Claim PIN от CloudStateMachine: отправить в Serial для flasher-portal и вывести баннер.
-    void onWebClaimPin(const char *pin, uint32_t expiresInSeconds)
-    {
-        strncpy(currentClaimPin, pin, sizeof(currentClaimPin) - 1);
-        currentClaimPin[sizeof(currentClaimPin) - 1] = '\0';
-        claimPinExpiresIn = expiresInSeconds;
-
-        // Machine-readable — для flasher-portal (Web Serial).
-        Serial.print("CLAIM_PIN:");
-        Serial.print(pin);
-        Serial.print(":");
-        Serial.println(expiresInSeconds);
-
-        // Human-readable баннер — для dev-клэйма через Serial Monitor.
-        Serial.println();
-        Serial.println("================================");
-        Serial.printf("  PIN: %s\n", pin);
-        Serial.println("  Введите в приложении iDryer");
-        Serial.printf("  Действителен: %u сек\n", expiresInSeconds);
-        Serial.println("================================");
-        Serial.println();
-        Serial.flush();
-
-        DEBUG_LOG("[CLAIM] PIN sent to Serial: %s (expires in %ds)\n", pin, expiresInSeconds);
-    }
-
-    /// Триггерит claim и печатает машинно-читаемый ответ (для flasher-portal).
-    /// Используется и для START_CLAIM, и для `claim`.
-    void triggerClaim()
-    {
-        bool result = device.requestClaimProcess();
-
-        if (result)
-        {
-            auto *csm = device.getCloudStateMachine();
-            if (csm && csm->getState() == cloud::CloudState::Ready)
-            {
-                const char *serial = csm->getIdentity().serialNumber;
-                Serial.printf("CLAIM_ALREADY:%s\n", serial);
-            }
-            else
-            {
-                Serial.println("CLAIM_STARTED:OK");
-            }
-        }
-        else
-        {
-            Serial.println("CLAIM_STARTED:ERROR");
-        }
-        Serial.flush();
-    }
-
-    void handleWebSerialCommand(const String &line)
-    {
-        // START_CLAIM — от flasher-portal (Web Serial).
-        // claim     — через Serial Monitor (dev-путь).
-        if (line.equalsIgnoreCase("START_CLAIM") || line.equalsIgnoreCase("claim"))
-        {
-            DEBUG_LOG("[CLAIM] Received '%s' command\n", line.c_str());
-            triggerClaim();
-        }
-        else if (line.equalsIgnoreCase("rmt_sweep"))
-        {
-            DEBUG_LOG("[TEST] RMT sweep start\n");
-            device.startRmtSweep();
-        }
-        else if (line.equalsIgnoreCase("rmt_stop"))
-        {
-            DEBUG_LOG("[TEST] RMT sweep stop\n");
-            device.stopRmtSweep();
-        }
-    }
-
-    // Читать строку из Serial и передать в handleWebSerialCommand (только если logsEnabled).
-    void processWebSerialCommands()
-    {
-        if (!logsEnabled)
-            return;
-
-        if (Serial.available() > 0)
-        {
-            String line = Serial.readStringUntil('\n');
-            line.trim();
-
-            if (line.length() > 0)
-            {
-                handleWebSerialCommand(line);
-            }
-        }
-    }
-
-} // namespace
-
-void setup()
-{
-    Serial.begin(115200);
-
-    // Improv занимает Serial до первого успешного коннекта — HAL логи пока в /dev/null.
-    initArduinoHal(nullptr);
-
-    improvSerial.setDeviceInfo(
-        ImprovTypes::ChipFamily::CF_ESP32_C3,
-        "iHeater Link",
-        VERSION_STR,
-        "iHeater Link",
-        "");
-
-    improvSerial.onImprovConnected(onImprovWiFiConnectCallback);
-    improvSerial.onImprovError(onImprovWiFiErrorCallback);
-
-    String savedSSID, savedPassword;
-    if (loadWiFiCredentials(savedSSID, savedPassword))
-    {
-        wifiManager.begin(savedSSID.c_str(), savedPassword.c_str());
-        wifiConfigured = true;
-    }
-#if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
-    else
-    {
-        wifiManager.begin(WIFI_SSID, WIFI_PASSWORD);
-        saveWiFiCredentials(WIFI_SSID, WIFI_PASSWORD);
-        wifiConfigured = true;
-    }
+// ── Hardware pins / sizes ────────────────────────────────────────────
+#ifndef STORAGE_MAX_LEDS
+#define STORAGE_MAX_LEDS 300
+#endif
+#ifndef STORAGE_LED_PIN
+#define STORAGE_LED_PIN 4
+#endif
+#ifndef STORAGE_I2C_SDA
+#define STORAGE_I2C_SDA 8
+#endif
+#ifndef STORAGE_I2C_SCL
+#define STORAGE_I2C_SCL 9
 #endif
 
-    device.begin();
-    device.setClaimPinCallback(onWebClaimPin);
+// ── Hardware: LED strip + climate sensor ─────────────────────────────
+static CRGB                s_leds[STORAGE_MAX_LEDS];
+static LedStripExecutor    s_executor(s_leds, STORAGE_MAX_LEDS);
+static Sht31ClimateSensor  s_sensor(&Wire);
+static bool                s_sensorOk = false;
+
+// ── Device facade ────────────────────────────────────────────────────
+static const iDryer::Config CFG = {
+    .deviceType        = iDryer::DeviceType::StorageLink,
+    .unitsCount        = 1,
+
+    .hasAirTemp        = true,    // SHT31 (опционально, при отсутствии — 0)
+    .hasAirHumidity    = true,
+    .hasHeaterTemp     = false,
+    .hasHeaterPower    = false,
+    .hasFanStatus      = false,
+    .hasScales         = false,
+    .hasRfid           = false,
+
+    .allowHa           = false,
+    .allowBambu        = false,
+    .allowMoonraker    = false,
+
+    .telemetryPeriodMs = 10000,
+    .statusPeriodMs    = 0,       // Storage не публикует status
+
+    .hardwareVersion   = "1.0",
+    .firmwareVersion   = "1.0.0",
+};
+
+static iDryer::Link s_link(CFG);
+
+// ── FastLED initialisation ───────────────────────────────────────────
+//
+// 1-wire chipsets only (data, без clock). 5 чипсетов × 6 color orders = 30 веток.
+// FastLED.addLeds<CHIPSET, PIN, ORDER>() — compile-time template, инстанциация
+// каждой комбинации. Через DCE неиспользуемые сжимаются.
+//
+// Изменение chipset / color_order в меню требует перезагрузки устройства —
+// FastLED.addLeds<> можно вызвать только один раз за boot.
+//
+// chipset: 0=WS2812B 1=WS2811 2=WS2813 3=WS2815 4=SK6812
+// order:   0=RGB     1=RBG    2=GRB    3=GBR    4=BRG    5=BGR
+
+#define ADD_CHIPSET_ORDERED(CHIP, COUNT, ORDER) \
+    case ORDER: FastLED.addLeds<CHIP, STORAGE_LED_PIN, ORDER>(s_leds, COUNT); break
+
+#define ADD_CHIPSET(CHIP, ORDER_IDX, COUNT)                              \
+    do {                                                                  \
+        switch (ORDER_IDX) {                                              \
+            ADD_CHIPSET_ORDERED(CHIP, COUNT, RGB);                        \
+            ADD_CHIPSET_ORDERED(CHIP, COUNT, RBG);                        \
+            ADD_CHIPSET_ORDERED(CHIP, COUNT, GRB);                        \
+            ADD_CHIPSET_ORDERED(CHIP, COUNT, GBR);                        \
+            ADD_CHIPSET_ORDERED(CHIP, COUNT, BRG);                        \
+            ADD_CHIPSET_ORDERED(CHIP, COUNT, BGR);                        \
+            default: FastLED.addLeds<CHIP, STORAGE_LED_PIN, GRB>(s_leds, COUNT); break; \
+        }                                                                 \
+    } while (0)
+
+static EOrder colorOrderEnum(uint8_t idx) {
+    switch (idx) {
+        case 0: return RGB;
+        case 1: return RBG;
+        case 2: return GRB;
+        case 3: return GBR;
+        case 4: return BRG;
+        case 5: return BGR;
+        default: return GRB;
+    }
 }
 
-void loop()
-{
-    device.loop();
-
-    if (!logsEnabled)
-    {
-        improvSerial.handleSerial();
-
-        if (wifiConfigured && WiFi.status() == WL_CONNECTED)
-        {
-            logsEnabled = true;
-            initArduinoHal(&Serial);
-
-            // mDNS нужен для резолва homeassistant.local (HA-интеграция).
-            // В оригинальном iDryer его запускает WsServer — здесь его нет.
-            {
-                const auto &id = device.getIdentity();
-                const char *mdnsName = id.hasSerialNumber() ? id.serialNumber : "iheater-link";
-                MDNS.begin(mdnsName);
-                MDNS.addService("_idryer", "_tcp", 80);
-            }
-
-            Serial.println("\n========================================");
-            Serial.printf("[BOOT] iHeater Link FW=%s\n", VERSION_STR);
-            Serial.println("[BOOT] Logs enabled after WiFi config");
-            // Диагностика: что реально прочитано из NVS в момент boot
-            // (store_->load() был вызван в device.begin() до включения логгера).
-            {
-                const auto &id = device.getIdentity();
-                Serial.printf("[BOOT] NVS identity: serial=%s token=%s deviceId=%s\n",
-                              id.hasSerialNumber() ? id.serialNumber : "(none)",
-                              id.hasToken() ? "YES" : "no",
-                              id.hasDeviceId() ? id.deviceId : "(none)");
-            }
-            Serial.println("[BOOT] Dev-claim: type 'claim' in Serial Monitor to trigger");
-            Serial.println("========================================");
-            HAL_LOG_INFO("CLOUD", "WiFi connected, IP: %s, RSSI: %d dBm",
-                         WiFi.localIP().toString().c_str(), WiFi.RSSI());
-
-            // Dev-автоклэйм: если в NVS нет токена — запускаем claim сразу.
-            auto *csm = device.getCloudStateMachine();
-            if (csm && !csm->getIdentity().hasToken())
-            {
-                Serial.println("[DEV] No token in NVS — auto claim");
-                Serial.flush();
-                triggerClaim();
-            }
-        }
+static void initLedStrip(uint8_t chipset, uint8_t order, uint16_t count) {
+    EOrder o = colorOrderEnum(order);
+    (void)o;   // используется внутри switch'ей по индексу — макрос подхватывает
+    switch (chipset) {
+        case 0: ADD_CHIPSET(WS2812B, order, count); break;
+        case 1: ADD_CHIPSET(WS2811,  order, count); break;
+        case 2: ADD_CHIPSET(WS2813,  order, count); break;
+        case 3: ADD_CHIPSET(WS2815,  order, count); break;
+        case 4: ADD_CHIPSET(SK6812,  order, count); break;
+        default: ADD_CHIPSET(WS2812B, order, count); break;
     }
-    else
-    {
-        processWebSerialCommands();
+    FastLED.clear(true);
+}
+
+// ── Menu NVS bootstrap ───────────────────────────────────────────────
+static void bootstrapMenu() {
+    if (!menu_nvs_begin()) {
+        HAL_LOG_WARN("MENU", "NVS begin failed — будут только дефолты в RAM");
+    }
+    menu.initDefaults();
+
+    uint32_t magic = 0, ver = 0;
+    ee_read(NVS_KEY_MAGIC, magic);
+    ee_read(NVS_KEY_VERSION, ver);
+    if (magic != NVS_MENU_MAGIC || ver != (uint32_t)NVS_MENU_VERSION) {
+        ee_write(NVS_KEY_MAGIC, (uint32_t)NVS_MENU_MAGIC);
+        ee_write(NVS_KEY_VERSION, (uint32_t)NVS_MENU_VERSION);
+        HAL_LOG_INFO("MENU", "NVS header initialized (magic=0x%08X ver=%u)",
+                     (unsigned)NVS_MENU_MAGIC, (unsigned)NVS_MENU_VERSION);
+    }
+    menu.loadFromNVS();
+    normalizeMenuGroups();
+}
+
+// ── После любого изменения меню — синхронизировать executor + animations ──
+static void onMenuChanged() {
+    // Defaults для led.pulse: цвет и длительность из меню.
+    s_executor.setDefaultColor(selectedPulseColor());
+    s_executor.setDefaultDurationSec(pulseDefaultDurationSec());
+    // Анимации: enabled/animation/color/яркость.
+    animationsApply();
+}
+
+// ── Полный config из меню → MQTT + Local WS ──────────────────────────
+// Один вызов — два транспорта (s_link.devicePublisher() — dual-publish helper).
+static void publishFullMenu() {
+    static char buf[MENU_FULL_JSON_BUF_SIZE];
+    size_t len = menu_buildFullJson(buf, sizeof(buf));
+    if (len == 0) {
+        HAL_LOG_ERROR("MENU", "menu_buildFullJson failed");
+        return;
+    }
+    s_link.devicePublisher()->publishConfigRaw(buf, len);
+}
+
+// ── Command handler ──────────────────────────────────────────────────
+static void handleCommand(const char* cmd, JsonObjectConst data) {
+    if (!cmd) return;
+
+    const char* action = data["action"] | "";
+
+    // get_config (или invoke device.getConfig) — отдаём полный config из меню.
+    if (strcmp(cmd, "get_config") == 0 ||
+        (strcmp(cmd, "invoke") == 0 && strcmp(action, "device.getConfig") == 0)) {
+        publishFullMenu();
+        return;
+    }
+
+    if (strcmp(cmd, "set") == 0) {
+        int id = data["id"] | -1;
+        // val приходит как bool / int / float — `data["val"] | -1` для bool
+        // даёт -1 (ArduinoJson v6 не кастует bool→int через operator|).
+        int val = -1;
+        if      (data["val"].is<bool>())  val = data["val"].as<bool>() ? 1 : 0;
+        else if (data["val"].is<int>())   val = data["val"].as<int>();
+        else if (data["val"].is<float>()) val = (int)data["val"].as<float>();
+
+        if (id >= 0 && val >= 0 &&
+            applyConfigChange(id, val, s_executor, onMenuChanged)) {
+            // После успешного set — повторно публикуем full config,
+            // чтобы UI клиента увидел новое значение без отдельного запроса.
+            publishFullMenu();
+        } else {
+            HAL_LOG_WARN("MAIN", "set ignored: id=%d val=%d (bad/unsupported)", id, val);
+        }
+        return;
+    }
+
+    if (strcmp(cmd, "invoke") == 0) {
+        // led.pulse, led.animation — actuator знает свой набор action'ов.
+        s_executor.execute(action, data["args"]);
+        return;
+    }
+
+    HAL_LOG_WARN("MAIN", "unhandled command: %s", cmd);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+
+void setup() {
+    // 1. Меню v3: NVS + дефолты + загрузка + нормализация toggle-групп.
+    //    ДО initLedStrip — нужен chipset / color_order.
+    bootstrapMenu();
+
+    // 2. LED strip: одноразовая FastLED-инициализация.
+    uint16_t ledCount = (menu.led_count > STORAGE_MAX_LEDS)
+                        ? STORAGE_MAX_LEDS
+                        : menu.led_count;
+    initLedStrip(selectedChipset(), selectedColorOrder(), ledCount);
+    applyMenuToExecutor(s_executor);
+    s_executor.setDefaultColor(selectedPulseColor());
+    s_executor.setDefaultDurationSec(pulseDefaultDurationSec());
+
+    // 3. Фоновые анимации.
+    animationsWire(&s_executor);
+    animationsApply();
+
+    // 4. SHT31: опциональный — устройство работает и без него.
+    Wire.begin(STORAGE_I2C_SDA, STORAGE_I2C_SCL);
+    s_sensorOk = s_sensor.begin();
+
+    // 5. Поднимаем стек: WiFi → claim → MQTT → telemetry/status автомат.
+    s_link.begin();
+
+    // ВАЖНО: setCommandHandler — строго ПОСЛЕ s_link.begin(). begin() ставит
+    // свой dispatchCommand; наш handleCommand должен его перезаписать.
+    s_link.runtime()->setCommandHandler(handleCommand);
+}
+
+void loop() {
+    s_link.loop();        // фасад: WiFi/MQTT/LocalAccess + auto-telemetry
+    s_executor.loop();    // off-by-timer для led.pulse
+
+    // Фоновая анимация работает только когда нет активного pulse (она это
+    // проверяет сама внутри animationsLoop).
+    animationsLoop(millis());
+
+    if (s_sensorOk) {
+        s_sensor.tick(millis());
+        SensorReading r = s_sensor.get();
+        if (r.ok) {
+            // Фасад читает эти поля по cfg.telemetryPeriodMs (10 сек) и
+            // публикует units[{unitId:"U1", temperature, humidity}] +
+            // rssi + uptime в MQTT и Local WS.
+            s_link.telemetry.airTempC[0]       = r.temperature;
+            s_link.telemetry.airHumidityPct[0] = r.humidity;
+        }
     }
 }

@@ -1,139 +1,377 @@
 # ===========================================
-# iHeater Link menu
+# Storage Link menu
 # Source of truth for generated menu files.
-# IMPORTANT:
+#
+# Conventions:
 # - units_count must stay second from the end
 # - language must stay last
+# - Toggle groups (chipset, color order, animation, idle/pulse color)
+#   are exclusive: activating one clears the others. Enforced in
+#   src/storage/led_strip/led_strip_menu.cpp.
 # ===========================================
 
 - id: root
   type: submenu
-  title: { ru: "IHEATER LINK", en: "IHEATER LINK" }
+  title: { ru: "STORAGE LINK", en: "STORAGE LINK" }
   children:
-    - id: portal
-      type: submenu
-      title: { ru: "ПОРТАЛ", en: "PORTAL" }
-      children:
-        - id: start_claim
-          type: action
-          title: { ru: "СВЯЗАТЬ", en: "CLAIM" }
-          on_invoke: start_claim
 
-    - id: connections
+    # ─── ЛЕНТА ─────────────────────────────────────────────
+    - id: led_strip
       type: submenu
-      title: { ru: "ПОДКЛЮЧЕНИЯ", en: "CONNECTIONS" }
+      title: { ru: "ЛЕНТА", en: "LED STRIP" }
       children:
-        # Только один из трёх может быть активным одновременно —
-        # эксклюзивность обеспечивает MenuBridge::applySetCommand
-        # (сбрасывает остальные _en при включении одного).
-        - id: bambu_enabled
+
+        - id: led_count
+          type: value
+          title: { ru: "КОЛ-ВО СВЕТОДИОДОВ", en: "LED COUNT" }
+          unit: { ru: "шт", en: "pcs" }
+          vtype: uint16
+          min: 1
+          max: 300
+          step: 1
+          bind: led_count
+          persist: true
+          scope: global
+          default: 120
+
+        - id: psu_ma
+          type: value
+          title: { ru: "ТОК БП", en: "PSU CURRENT" }
+          unit: { ru: "мА", en: "mA" }
+          vtype: uint16
+          min: 500
+          max: 20000
+          step: 100
+          bind: psu_ma
+          persist: true
+          scope: global
+          default: 5000
+
+        - id: brightness
+          type: value
+          title: { ru: "ЯРКОСТЬ", en: "BRIGHTNESS" }
+          unit: { ru: "", en: "" }
+          vtype: uint8
+          min: 0
+          max: 255
+          step: 5
+          bind: brightness
+          persist: true
+          scope: global
+          default: 200
+
+        # Тип ленты (1-wire chipsets only). Ровно один активный.
+        - id: chipset_group
+          type: submenu
+          title: { ru: "ТИП ЛЕНТЫ", en: "CHIPSET" }
+          children:
+            - id: chip_ws2812b
+              type: toggle
+              title: { ru: "WS2812B", en: "WS2812B" }
+              vtype: bool
+              bind: chip_ws2812b
+              persist: true
+              scope: global
+              default: true
+            - id: chip_ws2811
+              type: toggle
+              title: { ru: "WS2811", en: "WS2811" }
+              vtype: bool
+              bind: chip_ws2811
+              persist: true
+              scope: global
+              default: false
+            - id: chip_ws2813
+              type: toggle
+              title: { ru: "WS2813", en: "WS2813" }
+              vtype: bool
+              bind: chip_ws2813
+              persist: true
+              scope: global
+              default: false
+            - id: chip_ws2815
+              type: toggle
+              title: { ru: "WS2815", en: "WS2815" }
+              vtype: bool
+              bind: chip_ws2815
+              persist: true
+              scope: global
+              default: false
+            - id: chip_sk6812
+              type: toggle
+              title: { ru: "SK6812", en: "SK6812" }
+              vtype: bool
+              bind: chip_sk6812
+              persist: true
+              scope: global
+              default: false
+
+        # Порядок цветов. Все 6 перестановок. Ровно один активный.
+        - id: color_order_group
+          type: submenu
+          title: { ru: "ПОРЯДОК ЦВЕТОВ", en: "COLOR ORDER" }
+          children:
+            - id: order_rgb
+              type: toggle
+              title: { ru: "RGB", en: "RGB" }
+              vtype: bool
+              bind: order_rgb
+              persist: true
+              scope: global
+              default: false
+            - id: order_rbg
+              type: toggle
+              title: { ru: "RBG", en: "RBG" }
+              vtype: bool
+              bind: order_rbg
+              persist: true
+              scope: global
+              default: false
+            - id: order_grb
+              type: toggle
+              title: { ru: "GRB", en: "GRB" }
+              vtype: bool
+              bind: order_grb
+              persist: true
+              scope: global
+              default: true
+            - id: order_gbr
+              type: toggle
+              title: { ru: "GBR", en: "GBR" }
+              vtype: bool
+              bind: order_gbr
+              persist: true
+              scope: global
+              default: false
+            - id: order_brg
+              type: toggle
+              title: { ru: "BRG", en: "BRG" }
+              vtype: bool
+              bind: order_brg
+              persist: true
+              scope: global
+              default: false
+            - id: order_bgr
+              type: toggle
+              title: { ru: "BGR", en: "BGR" }
+              vtype: bool
+              bind: order_bgr
+              persist: true
+              scope: global
+              default: false
+
+    # ─── ФОНОВАЯ ПОДСВЕТКА (idle, без команд от портала) ──
+    - id: idle_lighting
+      type: submenu
+      title: { ru: "ФОН", en: "IDLE LIGHTING" }
+      children:
+
+        - id: idle_enabled
           type: toggle
-          title: { ru: "BAMBU", en: "BAMBU" }
+          title: { ru: "ВКЛЮЧЕНА", en: "ENABLED" }
           vtype: bool
-          bind: bambu_en
+          bind: idle_enabled
           persist: true
           scope: global
           default: false
 
-        - id: moon_enabled
-          type: toggle
-          title: { ru: "MOONRAKER", en: "MOONRAKER" }
-          vtype: bool
-          bind: moon_en
-          persist: true
-          scope: global
-          default: false
+        # Тип фоновой анимации. Ровно один активный.
+        - id: anim_group
+          type: submenu
+          title: { ru: "АНИМАЦИЯ", en: "ANIMATION" }
+          children:
+            - id: anim_solid
+              type: toggle
+              title: { ru: "Цвет", en: "Solid" }
+              vtype: bool
+              bind: anim_solid
+              persist: true
+              scope: global
+              default: false
+            - id: anim_breathe
+              type: toggle
+              title: { ru: "Дыхание", en: "Breathe" }
+              vtype: bool
+              bind: anim_breathe
+              persist: true
+              scope: global
+              default: false
+            - id: anim_wave
+              type: toggle
+              title: { ru: "Волна", en: "Wave" }
+              vtype: bool
+              bind: anim_wave
+              persist: true
+              scope: global
+              default: true
+            - id: anim_rainbow
+              type: toggle
+              title: { ru: "Радуга", en: "Rainbow" }
+              vtype: bool
+              bind: anim_rainbow
+              persist: true
+              scope: global
+              default: false
 
-        - id: ha_enabled
-          type: toggle
-          title: { ru: "HOME ASSISTANT", en: "HOME ASSISTANT" }
-          vtype: bool
-          bind: ha_en
-          persist: true
-          scope: global
-          default: false
+        # Цвет фоновой анимации. Игнорируется для Rainbow.
+        - id: idle_color_group
+          type: submenu
+          title: { ru: "ЦВЕТ", en: "COLOR" }
+          children:
+            - id: idle_red
+              type: toggle
+              title: { ru: "Красный", en: "Red" }
+              vtype: bool
+              bind: idle_red
+              persist: true
+              scope: global
+              default: false
+            - id: idle_orange
+              type: toggle
+              title: { ru: "Оранжевый", en: "Orange" }
+              vtype: bool
+              bind: idle_orange
+              persist: true
+              scope: global
+              default: false
+            - id: idle_yellow
+              type: toggle
+              title: { ru: "Жёлтый", en: "Yellow" }
+              vtype: bool
+              bind: idle_yellow
+              persist: true
+              scope: global
+              default: false
+            - id: idle_green
+              type: toggle
+              title: { ru: "Зелёный", en: "Green" }
+              vtype: bool
+              bind: idle_green
+              persist: true
+              scope: global
+              default: false
+            - id: idle_cyan
+              type: toggle
+              title: { ru: "Голубой", en: "Cyan" }
+              vtype: bool
+              bind: idle_cyan
+              persist: true
+              scope: global
+              default: false
+            - id: idle_blue
+              type: toggle
+              title: { ru: "Синий", en: "Blue" }
+              vtype: bool
+              bind: idle_blue
+              persist: true
+              scope: global
+              default: false
+            - id: idle_magenta
+              type: toggle
+              title: { ru: "Фиолетовый", en: "Magenta" }
+              vtype: bool
+              bind: idle_magenta
+              persist: true
+              scope: global
+              default: false
+            - id: idle_white
+              type: toggle
+              title: { ru: "Белый", en: "White" }
+              vtype: bool
+              bind: idle_white
+              persist: true
+              scope: global
+              default: true
 
-    - id: materials
+    # ─── ИМПУЛЬС (default'ы для led.pulse) ────────────────
+    - id: pulse_defaults
       type: submenu
-      title: { ru: "МАТЕРИАЛЫ", en: "MATERIALS" }
+      title: { ru: "ИМПУЛЬС", en: "PULSE DEFAULTS" }
       children:
-        - id: iheater_link_pla_temp
-          type: value
-          title: { ru: "PLA", en: "PLA" }
-          unit: { ru: "°C", en: "°C" }
-          vtype: float
-          min: 30
-          max: 90
-          step: 1
-          bind: mat_pla
-          persist: true
-          scope: global
-          default: 45.0
 
-        - id: iheater_link_petg_temp
-          type: value
-          title: { ru: "PETG", en: "PETG" }
-          unit: { ru: "°C", en: "°C" }
-          vtype: float
-          min: 30
-          max: 90
-          step: 1
-          bind: mat_petg
-          persist: true
-          scope: global
-          default: 50.0
+        # Цвет по умолчанию для led.pulse, если args.color не пришёл.
+        - id: pulse_color_group
+          type: submenu
+          title: { ru: "ЦВЕТ", en: "COLOR" }
+          children:
+            - id: pulse_red
+              type: toggle
+              title: { ru: "Красный", en: "Red" }
+              vtype: bool
+              bind: pulse_red
+              persist: true
+              scope: global
+              default: false
+            - id: pulse_orange
+              type: toggle
+              title: { ru: "Оранжевый", en: "Orange" }
+              vtype: bool
+              bind: pulse_orange
+              persist: true
+              scope: global
+              default: false
+            - id: pulse_yellow
+              type: toggle
+              title: { ru: "Жёлтый", en: "Yellow" }
+              vtype: bool
+              bind: pulse_yellow
+              persist: true
+              scope: global
+              default: false
+            - id: pulse_green
+              type: toggle
+              title: { ru: "Зелёный", en: "Green" }
+              vtype: bool
+              bind: pulse_green
+              persist: true
+              scope: global
+              default: false
+            - id: pulse_cyan
+              type: toggle
+              title: { ru: "Голубой", en: "Cyan" }
+              vtype: bool
+              bind: pulse_cyan
+              persist: true
+              scope: global
+              default: false
+            - id: pulse_blue
+              type: toggle
+              title: { ru: "Синий", en: "Blue" }
+              vtype: bool
+              bind: pulse_blue
+              persist: true
+              scope: global
+              default: false
+            - id: pulse_magenta
+              type: toggle
+              title: { ru: "Фиолетовый", en: "Magenta" }
+              vtype: bool
+              bind: pulse_magenta
+              persist: true
+              scope: global
+              default: false
+            - id: pulse_white
+              type: toggle
+              title: { ru: "Белый", en: "White" }
+              vtype: bool
+              bind: pulse_white
+              persist: true
+              scope: global
+              default: true
 
-        - id: iheater_link_abs_temp
+        # Длительность импульса по умолчанию, если args.durationSec не пришёл.
+        - id: pulse_duration
           type: value
-          title: { ru: "ABS", en: "ABS" }
-          unit: { ru: "°C", en: "°C" }
-          vtype: float
-          min: 30
-          max: 90
+          title: { ru: "ДЛИТЕЛЬНОСТЬ", en: "DURATION" }
+          unit: { ru: "сек", en: "sec" }
+          vtype: uint16
+          min: 1
+          max: 600
           step: 1
-          bind: mat_abs
+          bind: pulse_dur_sec
           persist: true
           scope: global
-          default: 60.0
-
-        - id: iheater_link_asa_temp
-          type: value
-          title: { ru: "ASA", en: "ASA" }
-          unit: { ru: "°C", en: "°C" }
-          vtype: float
-          min: 30
-          max: 90
-          step: 1
-          bind: mat_asa
-          persist: true
-          scope: global
-          default: 65.0
-
-        - id: iheater_link_pc_temp
-          type: value
-          title: { ru: "PC", en: "PC" }
-          unit: { ru: "°C", en: "°C" }
-          vtype: float
-          min: 30
-          max: 90
-          step: 1
-          bind: mat_pc
-          persist: true
-          scope: global
-          default: 70.0
-
-        - id: iheater_link_pa_temp
-          type: value
-          title: { ru: "PA / NYLON", en: "PA / NYLON" }
-          unit: { ru: "°C", en: "°C" }
-          vtype: float
-          min: 30
-          max: 90
-          step: 1
-          bind: mat_pa
-          persist: true
-          scope: global
-          default: 70.0
+          default: 30
 
     - id: units_count
       type: value

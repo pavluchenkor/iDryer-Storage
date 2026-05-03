@@ -371,16 +371,19 @@ void Link::loop() {
     }
 #endif
 
-    // Auto-publish on Config-defined intervals. Skipped when both transports
-    // are offline — DevicePublisher would no-op anyway, but skip saves CPU.
+    // Auto-publish on Config-defined intervals. Period == 0 means disabled
+    // (used by products that don't have telemetry or status — e.g. Storage Link
+    // does not publish status). Skipped when both transports are offline.
     const uint32_t now = millis();
     const bool anyTransport = impl_->pub.isMqttConnected() || impl_->pub.isLocalConnected();
     if (anyTransport) {
-        if (now - impl_->lastTelemetryMs >= impl_->cfg.telemetryPeriodMs) {
+        if (impl_->cfg.telemetryPeriodMs > 0 &&
+            now - impl_->lastTelemetryMs >= impl_->cfg.telemetryPeriodMs) {
             impl_->lastTelemetryMs = now;
             publishTelemetryNow();
         }
-        if (now - impl_->lastStatusMs >= impl_->cfg.statusPeriodMs) {
+        if (impl_->cfg.statusPeriodMs > 0 &&
+            now - impl_->lastStatusMs >= impl_->cfg.statusPeriodMs) {
             impl_->lastStatusMs = now;
             publishStatusNow();
         }
@@ -648,6 +651,10 @@ idryer::cloud::LinkIntegrationsManager* Link::integrationsManager() {
 
 idryer::MqttClient* Link::mqttClient() {
     return &impl_->mqtt;
+}
+
+idryer::DevicePublisher* Link::devicePublisher() {
+    return &impl_->pub;
 }
 
 idryer::IdryerRuntime* Link::runtime() {

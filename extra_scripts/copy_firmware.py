@@ -6,7 +6,7 @@ Post-build script: копирует firmware + bootloader + partitions + boot_ap
 
 ПУТИ НАЗНАЧЕНИЯ:
 1. Локальная папка: firmware/<board>/
-2. Flasher Portal: /Users/ruslanpavlucenko/Projects/iDryerPortal/flasher-portal/firmware/heater-link/<slot>/<board>/
+2. Flasher Portal: /Users/ruslanpavlucenko/Projects/iDryerPortal/flasher-portal/firmware/storage-link/<slot>/<board>/
 
 МАППИНГ ПЛАТ:
 - esp32c3-prod → esp32c3 (flasher-portal)
@@ -44,6 +44,9 @@ LOCAL_FIRMWARE_DIR = PROJECT_DIR / "firmware"
 
 BOOT_APP0_SRC = Path.home() / ".platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin"
 
+# Имя продукта — единственное, что меняется при переносе скрипта в другой проект
+PRODUCT_NAME = "storage-link"
+
 
 def _idryer_flasher_portal_root(scons_env):
     """Только переменная окружения: os.environ, затем SCons ENV (как у дочерних процессов PIO)."""
@@ -78,7 +81,7 @@ def copy_firmware(source, target, env):
     if portal_root:
         pr = Path(portal_root)
         if pr.is_dir():
-            flasher_firmware_base = pr / "firmware" / "heater-link"
+            flasher_firmware_base = pr / "firmware" / PRODUCT_NAME
         else:
             print(
                 f"  {YELLOW}[FIRMWARE] WARNING: IDRYER_FLASHER_PORTAL_PATH is not a directory: "
