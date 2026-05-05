@@ -1,4 +1,6 @@
-# Getting started
+# Углублённая настройка
+
+Если вы здесь впервые — перейдите на [Запустить за 5 минут](01-five-minutes.md), эта страница для углублённой настройки и решения проблем.
 
 Короткий путь: подключить библиотеку, прошить пример, увидеть мигающий LED и устройство в портале.
 
@@ -138,8 +140,8 @@ Production-сборка (`-e my-device-prod`, без `IDRYER_DEV_REPL`) испо
 
 После того как любой из примеров завёлся, читайте:
 
-- [02-architecture/01-composition-root.md](02-architecture/01-composition-root.md) — порядок объектов в `main.cpp`.
-- [02-architecture/03-data-flow.md](02-architecture/03-data-flow.md) — как движутся данные.
-- [12-patterns/](12-patterns/) — рецепты: добавить sensor, actuator, transport.
-- [10-how-to-add-product/01-add-new-product.md](10-how-to-add-product/01-add-new-product.md) — полный чеклист нового продукта.
-- [11-troubleshooting.md](11-troubleshooting.md) — что делать, если стек застрял.
+- [02-architecture/01-composition-root.md](../02-architecture/01-composition-root.md) — порядок объектов в `main.cpp`.
+- [02-architecture/03-data-flow.md](../02-architecture/03-data-flow.md) — как движутся данные.
+- [04-patterns/](../04-patterns/) — рецепты: добавить sensor, actuator, transport.
+- [10-how-to-add-product/01-add-new-product.md](../10-how-to-add-product/01-add-new-product.md) — полный чеклист нового продукта.
+- [11-troubleshooting.md](../11-troubleshooting.md) — что делать, если стек застрял.

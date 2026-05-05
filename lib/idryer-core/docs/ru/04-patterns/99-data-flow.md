@@ -217,4 +217,4 @@ s_actuator.setErrorCallback([](int code, const char* msg) {
 
 - [02-architecture/01-composition-root.md](../02-architecture/01-composition-root.md) — порядок создания и сборки.
 - [02-architecture/03-data-flow.md](../02-architecture/03-data-flow.md) — архитектурная схема.
-- [12-patterns/01-add-sensor.md](01-add-sensor.md), [02-add-actuator.md](02-add-actuator.md), [03-add-transport.md](03-add-transport.md) — конкретные рецепты компонентов.
+- [04-patterns/01-add-sensor.md](01-add-sensor.md), [02-add-actuator.md](02-add-actuator.md), [03-add-transport.md](03-add-transport.md) — конкретные рецепты компонентов.
