@@ -26,6 +26,9 @@
 #include <menu_commands.h>     // menu_buildFullJson, MENU_FULL_JSON_BUF_SIZE
 #include <menu_nvs_io.h>       // menu_nvs_begin, NVS_KEY_*
 
+// Always include WiFi for diagnostic dump (RSSI, IP).
+#include <WiFi.h>
+
 #include "storage/led_strip/led_strip_executor.h"
 #include "storage/led_strip/led_strip_menu.h"
 #include "storage/led_strip/led_strip_animations.h"
@@ -217,6 +220,88 @@ static void handleCommand(const char* cmd, JsonObjectConst data) {
     HAL_LOG_WARN("MAIN", "unhandled command: %s", cmd);
 }
 
+// ─── REPL (dev only) ────────────────────────────────────────────────────
+#ifdef IDRYER_DEV_REPL
+
+static void printHelp() {
+  Serial.println(F("\n=== iDryer dev REPL ==="));
+  Serial.println(F("  help                           — this list"));
+  Serial.println(F("  wifi <ssid> <password>         — set creds & connect"));
+  Serial.println(F("  status                         — wifi/online/serial"));
+  Serial.println(F("  claim                          — request claim flow"));
+  Serial.println(F("  wipe                           — erase NVS + reboot"));
+  Serial.println(F("  restart                        — soft reboot"));
+  Serial.println(F("======================="));
+}
+
+static void cmdStatus() {
+  Serial.printf("[status] wifi=%d ip=%s rssi=%d online=%d serial=%s\n",
+                (int)WiFi.status(),
+                WiFi.localIP().toString().c_str(),
+                WiFi.RSSI(),
+                s_link.isOnline() ? 1 : 0,
+                s_link.serial());
+}
+
+// Single line of input → command dispatch.
+static void runCommand(String line) {
+  line.trim();
+  if (line.length() == 0) return;
+
+  Serial.printf("> %s\n", line.c_str());
+
+  if (line.equalsIgnoreCase("help") || line == "?") {
+    printHelp();
+    return;
+  }
+  if (line.equalsIgnoreCase("status")) {
+    cmdStatus();
+    return;
+  }
+  if (line.equalsIgnoreCase("claim") || line.equalsIgnoreCase("START_CLAIM")) {
+    // Match prod-side flasher-portal protocol: emit CLAIM_STARTED / CLAIM_ALREADY.
+    if (s_link.isOnline()) {
+      Serial.printf("CLAIM_ALREADY:%s\n", s_link.serial());
+    } else {
+      bool ok = s_link.requestClaim();
+      Serial.println(ok ? "CLAIM_STARTED:OK" : "CLAIM_STARTED:ERROR");
+    }
+    Serial.flush();
+    return;
+  }
+  if (line.equalsIgnoreCase("wipe")) {
+    Serial.println("[wipe] erasing NVS + reboot…");
+    Serial.flush();
+    s_link.eraseClaimAndRestart();   // does not return
+    return;
+  }
+  if (line.equalsIgnoreCase("restart")) {
+    Serial.println("[restart] reboot…");
+    Serial.flush();
+    delay(100);
+    ESP.restart();
+    return;
+  }
+  if (line.startsWith("wifi ") || line.startsWith("WIFI ")) {
+    int sp1 = line.indexOf(' ');
+    int sp2 = line.indexOf(' ', sp1 + 1);
+    if (sp2 < 0) {
+      Serial.println("[wifi] usage: wifi <ssid> <password>");
+      return;
+    }
+    String ssid = line.substring(sp1 + 1, sp2);
+    String pass = line.substring(sp2 + 1);
+    Serial.printf("[wifi] saving '%s' / '****'\n", ssid.c_str());
+    s_link.setWifiCredentials(ssid.c_str(), pass.c_str());
+    WiFi.begin(ssid.c_str(), pass.c_str());
+    return;
+  }
+
+  Serial.printf("[?] unknown command: %s  (type 'help')\n", line.c_str());
+}
+
+#endif // IDRYER_DEV_REPL
+
 // ─────────────────────────────────────────────────────────────────────
 
 void setup() {
@@ -247,6 +332,10 @@ void setup() {
     // ВАЖНО: setCommandHandler — строго ПОСЛЕ s_link.begin(). begin() ставит
     // свой dispatchCommand; наш handleCommand должен его перезаписать.
     s_link.runtime()->setCommandHandler(handleCommand);
+
+#ifdef IDRYER_DEV_REPL
+    Serial.println(F("\n[boot] iDryer dev REPL ready — type 'help'"));
+#endif
 }
 
 void loop() {
@@ -268,4 +357,30 @@ void loop() {
             s_link.telemetry.airHumidityPct[0] = r.humidity;
         }
     }
+
+#ifdef IDRYER_DEV_REPL
+    // REPL on Serial. Improv is compiled out in this env.
+    // Triggers a command on any of:
+    //   - explicit CR or LF line terminator,
+    //   - idle timeout (no new byte for 120 ms) — covers terminals
+    //     configured to send "no line ending".
+    static String   buf;
+    static uint32_t lastByteMs = 0;
+
+    while (Serial.available() > 0) {
+        char c = (char)Serial.read();
+        lastByteMs = millis();
+        if (c == '\r' || c == '\n') {
+            if (buf.length() > 0) { runCommand(buf); buf = ""; }
+            continue;
+        }
+        buf += c;
+        if (buf.length() > 200) buf = "";   // overflow guard
+    }
+
+    if (buf.length() > 0 && millis() - lastByteMs > 120) {
+        runCommand(buf);
+        buf = "";
+    }
+#endif
 }
