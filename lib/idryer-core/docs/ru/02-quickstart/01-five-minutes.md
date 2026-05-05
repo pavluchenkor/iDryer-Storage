@@ -76,9 +76,9 @@ pio device monitor -b 115200
 
 ## 6. Привязать устройство в портале
 
-<!-- TODO: описать onboarding-процедуру подробнее — см. отдельную страницу onboarding (другой агент). -->
+Откройте [portal.idryer.org](https://portal.idryer.org/), перейдите в раздел **Add device** и введите PIN из Serial Monitor. После успешного claiming устройство перейдёт в `Online`, встроенный LED начнёт моргать раз в 500 мс.
 
-Откройте [portal.idryer.org](https://portal.idryer.org/), перейдите в раздел «Add device» и введите PIN из Serial Monitor. После успешного claiming устройство перейдёт в `Online`, встроенный LED начнёт моргать раз в 500 мс.
+Подробно про привязку: [Onboarding](02-onboarding.md).
 
 ## Что дальше
 
