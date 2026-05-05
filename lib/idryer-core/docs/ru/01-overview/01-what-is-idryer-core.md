@@ -40,5 +40,5 @@ void loop()  { link.loop(); link.telemetry.airTempC[0] = sensor.read(); }
 
 ## Куда дальше
 
-- [Запустить за 5 минут](../02-getting-started.md)
+- [Запустить за 5 минут](../02-quickstart/01-five-minutes.md)
 - [Полный API: iDryer::Link](../03-public-api/01-link-api-reference.md)

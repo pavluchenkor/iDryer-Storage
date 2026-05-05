@@ -84,7 +84,7 @@
 - [docs/ru/05-uart/01-uart-layer.md](docs/ru/05-uart/01-uart-layer.md) — UART-бридж для двухпроцессорных устройств (`#include <idryer_uart.h>`).
 - [docs/ru/06-integrations/01-integrations-overview.md](docs/ru/06-integrations/01-integrations-overview.md) — клиенты Bambu / Home Assistant / Moonraker (`#include <idryer_integrations.h>`).
 - [docs/ru/10-how-to-add-product/01-add-new-product.md](docs/ru/10-how-to-add-product/01-add-new-product.md) — чеклист сборки нового продукта.
-- [docs/ru/11-troubleshooting.md](docs/ru/11-troubleshooting.md) — типовые проблемы и их причины.
+- [docs/ru/10-troubleshooting.md](docs/ru/10-troubleshooting.md) — типовые проблемы и их причины.
 - Полный индекс документации: [`docs/ru/README.md`](docs/ru/README.md).
 
 ## Зависимости

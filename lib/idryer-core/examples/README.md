@@ -64,7 +64,7 @@ PIN введите в [portal.idryer.org](https://portal.idryer.org/) → "Add d
 
 ## Если что-то не работает
 
-См. [`docs/ru/11-troubleshooting.md`](../docs/ru/11-troubleshooting.md) — типовые проблемы по разделам: WiFi, provisioning, MQTT, команды, telemetry, NTP, ArduinoJson, Improv, LocalAccess.
+См. [`docs/ru/10-troubleshooting.md`](../docs/ru/10-troubleshooting.md) — типовые проблемы по разделам: WiFi, provisioning, MQTT, команды, telemetry, NTP, ArduinoJson, Improv, LocalAccess.
 
 ## Что читать дальше
 

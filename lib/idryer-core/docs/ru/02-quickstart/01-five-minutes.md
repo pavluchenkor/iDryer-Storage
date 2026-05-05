@@ -85,4 +85,4 @@ pio device monitor -b 115200
 - Добавить датчик — [04-patterns/01-add-sensor.md](../04-patterns/01-add-sensor.md)
 - Добавить actuator — [04-patterns/02-add-actuator.md](../04-patterns/02-add-actuator.md)
 - Полный справочник API — [03-public-api/01-link-api-reference.md](../03-public-api/01-link-api-reference.md)
-- Как работает изнутри — [02-architecture/01-composition-root.md](../02-architecture/01-composition-root.md)
+- Как работает изнутри — [05-architecture/01-composition-root.md](../05-architecture/01-composition-root.md)

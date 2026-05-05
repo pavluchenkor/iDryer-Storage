@@ -52,7 +52,7 @@
 | [08-profiles-and-products/01-profiles-model](08-profiles-and-products/01-profiles-model.md) | Интерфейс `IProfile`, колбэки, пример `LedStripProfile` |
 | [09-contracts/01-mqtt-contract](09-contracts/01-mqtt-contract.md) | Файл `mqtt_contract.yaml`: назначение и правила изменения |
 | [10-how-to-add-product/01-add-new-product](10-how-to-add-product/01-add-new-product.md) | Чеклист сборки нового продукта на базе `idryer-core` |
-| [11-troubleshooting](11-troubleshooting.md) | Типовые проблемы: WiFi, provisioning, MQTT, команды, LocalAccess |
+| [10-troubleshooting](10-troubleshooting.md) | Типовые проблемы: WiFi, provisioning, MQTT, команды, LocalAccess |
 | [12-patterns/01-add-sensor](12-patterns/01-add-sensor.md) | Как добавить sensor (источник данных) и его публикацию |
 | [12-patterns/02-add-actuator](12-patterns/02-add-actuator.md) | Как добавить actuator (исполнитель) и приём команд |
 | [12-patterns/03-add-transport](12-patterns/03-add-transport.md) | Как добавить параллельный transport (BLE, HTTP, custom) |
