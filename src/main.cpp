@@ -3,7 +3,7 @@
 // Тонкий composition root через iDryer::Link фасад. Образцовый Arduino-style
 // пример простого устройства линейки iDryer:
 //   • один unit;
-//   • actuator   — адресная LED-лента (1-wire chipsets: WS2812B/WS2811/
+//   •   периферия — адресная LED-лента (1-wire chipsets: WS2812B/WS2811/
 //                  WS2813/WS2815/SK6812-RGB) + фоновые анимации;
 //   • sensor     — опциональный SHT31 (температура + влажность);
 //   • меню       — генерируется из lib/idryer-menu/menu_v2.yaml;
@@ -212,7 +212,7 @@ static void handleCommand(const char* cmd, JsonObjectConst data) {
     }
 
     if (strcmp(cmd, "invoke") == 0) {
-        // led.pulse, led.animation — actuator знает свой набор action'ов.
+        // led.pulse, led.animation — LED-лента знает свой набор action'ов.
         s_executor.execute(action, data["args"]);
         return;
     }
