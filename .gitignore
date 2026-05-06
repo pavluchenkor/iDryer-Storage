@@ -21,3 +21,7 @@ docs-service/
 
 # Environment variables
 .env
+
+# idryer-core теперь живёт отдельным репозиторием
+# https://github.com/pavluchenkor/idryer-core
+lib/idryer-core
