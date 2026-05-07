@@ -27,6 +27,7 @@ flasher-portal). Читается при каждом post-action; дополн�
 
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -76,9 +77,23 @@ _build_dir = Path(env.subst("$BUILD_DIR"))
 
 
 def copy_firmware(source, target, env):
+    # Flasher-portal разрешён только из релизной ветки (main или master).
+    # На dev/feature-ветках копируем только локально — публичный инсталлер не трогаем.
+    try:
+        branch = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=str(PROJECT_DIR), text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        branch = "unknown"
+
+    flasher_portal_allowed = branch in ("main", "master")
+    if not flasher_portal_allowed:
+        print(f"  {YELLOW}[FIRMWARE] Branch '{branch}' is not a release branch → flasher-portal skipped{RESET}")
+
     portal_root = _idryer_flasher_portal_root(env)
     flasher_firmware_base = None
-    if portal_root:
+    if portal_root and flasher_portal_allowed:
         pr = Path(portal_root)
         if pr.is_dir():
             flasher_firmware_base = pr / "firmware" / PRODUCT_NAME
