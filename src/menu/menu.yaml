@@ -30,6 +30,7 @@
           max: 300
           step: 1
           bind: led_count
+          role: storage.led_count
           persist: true
           scope: global
           default: 120
@@ -56,6 +57,7 @@
           max: 255
           step: 5
           bind: brightness
+          role: storage.led_brightness
           persist: true
           scope: global
           default: 200
