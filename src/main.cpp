@@ -178,23 +178,16 @@ static void publishFullMenu() {
     s_link.devicePublisher()->publishConfigRaw(buf, len);
 }
 
-// ── Command handler ──────────────────────────────────────────────────
-static void handleCommand(const char* cmd, JsonObjectConst data) {
-    if (!cmd) return;
-
-    const char* action = data["action"] | "";
-
-    // get_config (или invoke device.getConfig) — отдаём полный config из меню.
-    if (strcmp(cmd, "get_config") == 0 ||
-        (strcmp(cmd, "invoke") == 0 && strcmp(action, "device.getConfig") == 0)) {
+// ── Регистрация продуктовых команд через onCommand ───────────────────
+// Built-in команды (link_integration / bambu_apply / ping) обрабатывает
+// либа сама — здесь только продуктовые имена.
+static void registerCommands() {
+    s_link.onCommand("get_config", [](JsonObjectConst) {
         publishFullMenu();
-        return;
-    }
+    });
 
-    if (strcmp(cmd, "set") == 0) {
+    s_link.onCommand("set", [](JsonObjectConst data) {
         int id = data["id"] | -1;
-        // val приходит как bool / int / float — `data["val"] | -1` для bool
-        // даёт -1 (ArduinoJson v6 не кастует bool→int через operator|).
         int val = -1;
         if      (data["val"].is<bool>())  val = data["val"].as<bool>() ? 1 : 0;
         else if (data["val"].is<int>())   val = data["val"].as<int>();
@@ -202,22 +195,23 @@ static void handleCommand(const char* cmd, JsonObjectConst data) {
 
         if (id >= 0 && val >= 0 &&
             applyConfigChange(id, val, s_executor, onMenuChanged)) {
-            // После успешного set — повторно публикуем full config,
-            // чтобы UI клиента увидел новое значение без отдельного запроса.
+            // Повторно публикуем full config — UI видит изменения без запроса.
             publishFullMenu();
         } else {
             HAL_LOG_WARN("MAIN", "set ignored: id=%d val=%d (bad/unsupported)", id, val);
         }
-        return;
-    }
+    });
 
-    if (strcmp(cmd, "invoke") == 0) {
+    s_link.onCommand("invoke", [](JsonObjectConst data) {
+        const char* action = data["action"] | "";
+        // Удобный alias для get_config через invoke API.
+        if (strcmp(action, "device.getConfig") == 0) {
+            publishFullMenu();
+            return;
+        }
         // led.pulse, led.animation — LED-лента знает свой набор action'ов.
         s_executor.execute(action, data["args"]);
-        return;
-    }
-
-    HAL_LOG_WARN("MAIN", "unhandled command: %s", cmd);
+    });
 }
 
 // ─── REPL (dev only) ────────────────────────────────────────────────────
@@ -329,9 +323,10 @@ void setup() {
     // 5. Поднимаем стек: WiFi → claim → MQTT → telemetry/status автомат.
     s_link.begin();
 
-    // ВАЖНО: setCommandHandler — строго ПОСЛЕ s_link.begin(). begin() ставит
-    // свой dispatchCommand; наш handleCommand должен его перезаписать.
-    s_link.runtime()->setCommandHandler(handleCommand);
+    // Команды портала / Local-WS — единый путь через onCommand.
+    // get_config / set / invoke — продуктовые. Built-in (link_integration,
+    // bambu_apply, ping) обрабатывает либа сама.
+    registerCommands();
 
 #ifdef IDRYER_DEV_REPL
     Serial.println(F("\n[boot] iDryer dev REPL ready — type 'help'"));
