@@ -203,8 +203,12 @@ static void registerCommands() {
     });
 
     s_link.onCommand("invoke", [](JsonObjectConst data) {
+        // TODO menu_protocol_v1: унифицировать с iHeater Link ::applyInvokeCommand
+        // (invoke по menu id с args). Сейчас Storage использует action-by-name
+        // через ActionDispatcher — продуктовый механизм для LED-команд с args.
+        // Будет объединено когда добавим args в MenuItem.action (на этапе
+        // миграции сушилки). См. ___capabilities_and_menu_as_protocol.md §10.2.
         const char* action = data["action"] | "";
-        // Удобный alias для get_config через invoke API.
         if (strcmp(action, "device.getConfig") == 0) {
             publishFullMenu();
             return;
