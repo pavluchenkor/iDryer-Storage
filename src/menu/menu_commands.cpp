@@ -304,6 +304,16 @@ size_t menu_buildFullJson(char* buf, size_t bufSize) {
             item["u"] = meta->unit[lang];
         }
 
+        // menu_protocol_v1: каноническая роль и хардкод-виджет.
+        // Если указаны в menu.yaml — публикуем в config-payload, портал
+        // использует для рендера UI (___capabilities_and_menu_as_protocol.md §6.3).
+        if (meta->role) {
+            item["r"] = meta->role;
+        }
+        if (meta->widget) {
+            item["widget"] = meta->widget;
+        }
+
         // Для val/tog добавляем значения и диапазоны
         if (meta->type == META_VALUE || meta->type == META_TOGGLE) {
             // min/max/step для value
