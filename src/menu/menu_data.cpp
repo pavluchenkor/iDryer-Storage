@@ -4,12 +4,20 @@
 #include "menu_types.h"
 #include "menu_state.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+void led_pulse(void);
+#ifdef __cplusplus
+}
+#endif
+
 extern MenuState menu;
 
 const MenuItem g_menu[MENU__COUNT] = {
   [0] = {
     MENU_ROOT, { "STORAGE LINK", "STORAGE LINK" }, { nullptr, nullptr },
-    MN_SUBMENU, -1, 1, 5,
+    MN_SUBMENU, -1, 1, 6,
     { { NULL }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
     -1, 0
   },
@@ -278,12 +286,18 @@ const MenuItem g_menu[MENU__COUNT] = {
     -1, 0
   },
   [45] = {
+    MENU_LED_PULSE, { "ИМПУЛЬС", "LED PULSE" }, { nullptr, nullptr },
+    MN_ACTION, 0, -1, 0,
+    { { led_pulse }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
+    -1, 0
+  },
+  [46] = {
     MENU_UNITS_COUNT, { "КОЛ-ВО ЮНИТОВ", "UNITS" }, { nullptr, nullptr },
     MN_VALUE, 0, -1, 0,
     { { NULL }, { VT_U8, (void*)&menu.units_count, 1, 1, 1, nullptr, false } },
     -1, 0
   },
-  [46] = {
+  [47] = {
     MENU_LANGUAGE, { "ЯЗЫК", "LANGUAGE" }, { nullptr, nullptr },
     MN_VALUE, 0, -1, 0,
     { { NULL }, { VT_U8, (void*)&menu.language, 0, 1, 1, nullptr, false } },

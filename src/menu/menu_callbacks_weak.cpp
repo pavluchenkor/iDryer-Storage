@@ -4,6 +4,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+void led_pulse(void) __attribute__((weak));
+void led_pulse(void) { /* stub */ }
 uint8_t menu_get_active_controller(void) __attribute__((weak));
 uint8_t menu_get_active_controller(void) { return 0; }
 #ifdef __cplusplus

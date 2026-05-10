@@ -13,13 +13,12 @@ namespace {
 // ── State ────────────────────────────────────────────────────────────
 LedStripExecutor* g_exec = nullptr;
 
-// «Эффективное» состояние что рендерится прямо сейчас.
-// При активном override — копия override. Иначе — копия menu.
+// Текущие параметры рендера: override если активен, иначе берётся из меню.
 bool      g_enabled = false;
 AnimKind  g_anim    = AnimKind::Solid;
 CRGB      g_color   = CRGB::White;
 
-// Override-state (RAM, не persist). Применяется поверх menu, пока g_overrideActive.
+// Временный override (не сохраняется в NVS): перекрывает меню пока g_overrideActive.
 bool      g_overrideActive  = false;
 bool      g_overrideEnabled = false;
 AnimKind  g_overrideAnim    = AnimKind::Solid;
@@ -30,8 +29,7 @@ uint32_t  g_lastFrameMs = 0;
 uint32_t  g_animStartMs = 0;        // момент начала текущей анимации (для phase)
 constexpr uint32_t kFrameIntervalMs = 33;   // ~30 fps
 
-// Smooth crossfade при смене настроек: каждый кадр nblend от текущего к target.
-// 32/255 ≈ ~32 кадра до полного слияния, что даёт ~500 мс при 30 fps.
+// Плавный переход цвета при смене настроек: nblend на 32/255 за кадр → ~500 мс при 30 fps.
 constexpr fract8 kBlendStep = 32;
 
 // Параметры анимаций (захардкожены).
@@ -50,8 +48,7 @@ uint32_t crgbKey(const CRGB& c) {
     return ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.b;
 }
 
-// Применить g_enabled/g_anim/g_color из текущего эффективного источника
-// (override приоритетнее menu). Перезапустить фазу если состояние сменилось.
+// Копирует g_enabled/g_anim/g_color из override (если активен) или из меню; перезапускает фазу при смене.
 void recomputeEffective() {
     if (g_overrideActive) {
         g_enabled = g_overrideEnabled;
@@ -72,8 +69,7 @@ void recomputeEffective() {
 }
 
 // ── Renderers ───────────────────────────────────────────────────────
-// Каждый рендерер пишет в g_target[] (через локальный буфер) и main blend-loop
-// плавно сливает g_target в реальный leds[].
+// Каждый рендерер заполняет target[], затем nblend плавно переводит target в leds[].
 
 void renderSolid(CRGB* dst, uint16_t n, uint32_t /*phaseMs*/, CRGB color) {
     fill_solid(dst, n, color);
@@ -107,18 +103,7 @@ void renderRainbow(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB /*color*/) {
     fill_rainbow(dst, n, hueOffset, 256 / (n > 0 ? n : 1));
 }
 
-// Twinkle — спокойная анимация: фон базовым цветом на низкой яркости (~10%),
-// плюс редкие случайные яркие вспышки отдельных LED'ов с медленным fade.
-// Состояние per-LED — массив времени последней вспышки. Проверяем все LED'ы
-// каждый кадр; шансы малы → одновременно горит несколько штук.
-//
-// Параметры:
-//   kTwinkleBaseScale — яркость базового цвета на «спящих» LED'ах.
-//   kTwinkleSpawnThr  — порог вероятности вспышки в parts-of-65536:
-//                       random16() < threshold → spawn.
-//                       100/65536 ≈ 0.15% / LED / frame → на ленте 100 LED
-//                       ~5 новых вспышек/сек при 30 fps.
-//   kTwinkleFadeMs    — длительность fade-out от пика до базового уровня.
+// Twinkle: тёмный фон (~10% яркости) + редкие случайные вспышки LED с плавным угасанием за kTwinkleFadeMs.
 constexpr uint8_t  kTwinkleBaseScale = 26;     // ~10% яркости (26/255)
 constexpr uint16_t kTwinkleSpawnThr  = 100;    // ~0.15% / LED / frame
 constexpr uint32_t kTwinkleFadeMs    = 1200;   // fade длится 1.2 сек

@@ -7,7 +7,7 @@
 
 #define MENU_MAX_UNITS 1
 
-// Total menu items: 47, with values: 38
+// Total menu items: 48, with values: 38
 
 union MenuValue {
     float    f32;

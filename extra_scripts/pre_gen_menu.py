@@ -41,7 +41,7 @@ Import("env")
 PROJECT_DIR = Path(env["PROJECT_DIR"])
 OUT_DIR     = PROJECT_DIR / "src" / "menu"
 YAML_PATH   = OUT_DIR / "menu.yaml"
-GEN_PATH    = PROJECT_DIR / "lib" / "idryer-core" / "menu" / "menu_gen.py"
+GEN_PATH      = PROJECT_DIR / "lib" / "idryer-core" / "menu" / "menu_gen.py"
 TEMPLATE_PATH = PROJECT_DIR / "lib" / "idryer-core" / "menu" / "menu.template.yaml"
 
 GREEN = "\033[92m"

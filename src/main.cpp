@@ -1,14 +1,4 @@
-// iDryer Storage Link — main.cpp.
-//
-// Тонкий composition root через iDryer::Link фасад. Образцовый Arduino-style
-// пример простого устройства линейки iDryer:
-//   • один unit;
-//   •   периферия — адресная LED-лента (1-wire chipsets: WS2812B/WS2811/
-//                  WS2813/WS2815/SK6812-RGB) + фоновые анимации;
-//   • sensor     — опциональный SHT31 (температура + влажность);
-//   • меню       — генерируется из lib/idryer-menu/menu_v2.yaml;
-//   • облако     — WiFi → MQTT → portal через iDryer::Link;
-//   • LAN-app    — WebSocket-клиент видит то же что и облако (один publish на оба).
+// iDryer Storage Link — точка входа: меню/NVS → LED-лента → SHT31 → SDK begin() → onCommand-обработчики.
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -59,13 +49,14 @@ static const iDryer::Config CFG = {
     .deviceType        = iDryer::DeviceType::StorageLink,
     .unitsCount        = 1,
 
+    .hasHeaterPower    = false,
+    .hasFanStatus      = false,
+    .hasLed            = true,
+    .hasScales         = false,
+    .hasRfid           = false,
     .hasAirTemp        = true,    // SHT31 (опционально, при отсутствии — 0)
     .hasAirHumidity    = true,
     .hasHeaterTemp     = false,
-    .hasHeaterPower    = false,
-    .hasFanStatus      = false,
-    .hasScales         = false,
-    .hasRfid           = false,
 
     .allowHa           = false,
     .allowBambu        = false,
@@ -76,19 +67,15 @@ static const iDryer::Config CFG = {
 
     .hardwareVersion   = "1.0",
     .firmwareVersion   = "1.0.0",
+
+    // Название продукта — отображается в колонке «Тип» на странице устройств.
+    // Задаётся свободно: любая строка UTF-8.
+    .model             = "iDryer Storage",
 };
 
 static iDryer::Link s_link(CFG);
 
-// ── FastLED initialisation ───────────────────────────────────────────
-//
-// 1-wire chipsets only (data, без clock). 5 чипсетов × 6 color orders = 30 веток.
-// FastLED.addLeds<CHIPSET, PIN, ORDER>() — compile-time template, инстанциация
-// каждой комбинации. Через DCE неиспользуемые сжимаются.
-//
-// Изменение chipset / color_order в меню требует перезагрузки устройства —
-// FastLED.addLeds<> можно вызвать только один раз за boot.
-//
+// FastLED требует тип чипсета как шаблонный параметр — задаётся один раз при boot (смена требует перезагрузки).
 // chipset: 0=WS2812B 1=WS2811 2=WS2813 3=WS2815 4=SK6812
 // order:   0=RGB     1=RBG    2=GRB    3=GBR    4=BRG    5=BGR
 
@@ -122,7 +109,7 @@ static EOrder colorOrderEnum(uint8_t idx) {
 
 static void initLedStrip(uint8_t chipset, uint8_t order, uint16_t count) {
     EOrder o = colorOrderEnum(order);
-    (void)o;   // используется внутри switch'ей по индексу — макрос подхватывает
+    (void)o;   // o не передаётся в макрос — подавление предупреждения компилятора
     switch (chipset) {
         case 0: ADD_CHIPSET(WS2812B, order, count); break;
         case 1: ADD_CHIPSET(WS2811,  order, count); break;
@@ -152,12 +139,11 @@ static void bootstrapMenu() {
     }
     menu.loadFromNVS();
     normalizeMenuGroups();
-    // Bootstrap sync MenuState→g_menu_cache. Без этого первый commands/get_config
-    // отдаст дефолтные значения вместо реально загруженных из NVS.
+    // Синхронизирует MenuState → g_menu_cache; без этого get_config вернёт дефолты вместо NVS-значений.
     menu_sync_state_to_cache();
 }
 
-// ── После любого изменения меню — синхронизировать executor + animations ──
+// Обновляет executor и анимации после изменения параметров меню.
 static void onMenuChanged() {
     // Defaults для led.pulse: цвет и длительность из меню.
     s_executor.setDefaultColor(selectedPulseColor());
@@ -178,9 +164,7 @@ static void publishFullMenu() {
     s_link.devicePublisher()->publishConfigRaw(buf, len);
 }
 
-// ── Регистрация продуктовых команд через onCommand ───────────────────
-// Built-in команды (link_integration / bambu_apply / ping) обрабатывает
-// либа сама — здесь только продуктовые имена.
+// Продуктовые команды портала/Local-WS (get_config/set/invoke). Встроенные (ping и др.) — в либе.
 static void registerCommands() {
     s_link.onCommand("get_config", [](JsonObjectConst) {
         publishFullMenu();
@@ -203,11 +187,7 @@ static void registerCommands() {
     });
 
     s_link.onCommand("invoke", [](JsonObjectConst data) {
-        // TODO menu_protocol_v1: унифицировать с iHeater Link ::applyInvokeCommand
-        // (invoke по menu id с args). Сейчас Storage использует action-by-name
-        // через ActionDispatcher — продуктовый механизм для LED-команд с args.
-        // Будет объединено когда добавим args в MenuItem.action (на этапе
-        // миграции сушилки). См. ___capabilities_and_menu_as_protocol.md §10.2.
+        // TODO: унифицировать invoke с iHeater Link (menu id + args) при миграции сушилки.
         const char* action = data["action"] | "";
         if (strcmp(action, "device.getConfig") == 0) {
             publishFullMenu();
@@ -241,7 +221,7 @@ static void cmdStatus() {
                 s_link.serial());
 }
 
-// Single line of input → command dispatch.
+// Разбирает команду из Serial и вызывает нужный обработчик.
 static void runCommand(String line) {
   line.trim();
   if (line.length() == 0) return;
@@ -257,7 +237,7 @@ static void runCommand(String line) {
     return;
   }
   if (line.equalsIgnoreCase("claim") || line.equalsIgnoreCase("START_CLAIM")) {
-    // Match prod-side flasher-portal protocol: emit CLAIM_STARTED / CLAIM_ALREADY.
+    // Протокол загрузчика: отвечаем CLAIM_ALREADY или CLAIM_STARTED.
     if (s_link.isOnline()) {
       Serial.printf("CLAIM_ALREADY:%s\n", s_link.serial());
     } else {
@@ -327,9 +307,6 @@ void setup() {
     // 5. Поднимаем стек: WiFi → claim → MQTT → telemetry/status автомат.
     s_link.begin();
 
-    // Команды портала / Local-WS — единый путь через onCommand.
-    // get_config / set / invoke — продуктовые. Built-in (link_integration,
-    // bambu_apply, ping) обрабатывает либа сама.
     registerCommands();
 
 #ifdef IDRYER_DEV_REPL
@@ -341,28 +318,19 @@ void loop() {
     s_link.loop();        // фасад: WiFi/MQTT/LocalAccess + auto-telemetry
     s_executor.loop();    // off-by-timer для led.pulse
 
-    // Фоновая анимация работает только когда нет активного pulse (она это
-    // проверяет сама внутри animationsLoop).
-    animationsLoop(millis());
+    animationsLoop(millis());   // не запускается пока активен pulse (проверяет внутри)
 
     if (s_sensorOk) {
         s_sensor.tick(millis());
         SensorReading r = s_sensor.get();
         if (r.ok) {
-            // Фасад читает эти поля по cfg.telemetryPeriodMs (10 сек) и
-            // публикует units[{unitId:"U1", temperature, humidity}] +
-            // rssi + uptime в MQTT и Local WS.
             s_link.telemetry.airTempC[0]       = r.temperature;
-            s_link.telemetry.airHumidityPct[0] = r.humidity;
+            s_link.telemetry.airHumidityPct[0] = r.humidity;   // публикуются по telemetryPeriodMs
         }
     }
 
 #ifdef IDRYER_DEV_REPL
-    // REPL on Serial. Improv is compiled out in this env.
-    // Triggers a command on any of:
-    //   - explicit CR or LF line terminator,
-    //   - idle timeout (no new byte for 120 ms) — covers terminals
-    //     configured to send "no line ending".
+    // Разбор ввода: завершение по CR/LF или паузе 120 мс (для терминалов без «конца строки»).
     static String   buf;
     static uint32_t lastByteMs = 0;
 
@@ -374,7 +342,7 @@ void loop() {
             continue;
         }
         buf += c;
-        if (buf.length() > 200) buf = "";   // overflow guard
+        if (buf.length() > 200) buf = "";   // защита от переполнения
     }
 
     if (buf.length() > 0 && millis() - lastByteMs > 120) {

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MENU_META_COUNT 47
+#define MENU_META_COUNT 48
 #define MENU_LANG_COUNT 2
 
 typedef enum {
@@ -53,7 +53,7 @@ typedef struct {
 static const MenuMeta g_menu_meta[MENU_META_COUNT] = {
     // [0] root
     { 0, { "STORAGE LINK", "STORAGE LINK" }, { nullptr, nullptr },
-      META_SUBMENU, -1, 1, 5,
+      META_SUBMENU, -1, 1, 6,
       META_VT_F32, 0.0f, 0.0f, 0.0f, META_SCOPE_PER_UNIT,
       nullptr, nullptr },
     // [1] led_strip
@@ -276,13 +276,18 @@ static const MenuMeta g_menu_meta[MENU_META_COUNT] = {
       META_VALUE, 34, -1, 0,
       META_VT_U16, 1.0f, 600.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [45] units_count
-    { 45, { "КОЛ-ВО ЮНИТОВ", "UNITS" }, { nullptr, nullptr },
+    // [45] led_pulse
+    { 45, { "ИМПУЛЬС", "LED PULSE" }, { nullptr, nullptr },
+      META_ACTION, 0, -1, 0,
+      META_VT_F32, 0.0f, 0.0f, 0.0f, META_SCOPE_PER_UNIT,
+      "led.pulse", "LedPulse" },
+    // [46] units_count
+    { 46, { "КОЛ-ВО ЮНИТОВ", "UNITS" }, { nullptr, nullptr },
       META_VALUE, 0, -1, 0,
       META_VT_U8, 1.0f, 1.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [46] language
-    { 46, { "ЯЗЫК", "LANGUAGE" }, { nullptr, nullptr },
+    // [47] language
+    { 47, { "ЯЗЫК", "LANGUAGE" }, { nullptr, nullptr },
       META_VALUE, 0, -1, 0,
       META_VT_U8, 0.0f, 1.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },

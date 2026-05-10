@@ -375,6 +375,14 @@
           scope: global
           default: 30
 
+    # ─── LED PULSE (портальный виджет) ───────────────────────
+    - id: led_pulse
+      type: action
+      title: { ru: "ИМПУЛЬС", en: "LED PULSE" }
+      on_invoke: led_pulse
+      role: led.pulse
+      widget: LedPulse
+
     - id: units_count
       type: value
       title: { ru: "КОЛ-ВО ЮНИТОВ", en: "UNITS" }
