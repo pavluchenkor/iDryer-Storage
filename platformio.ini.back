@@ -1,23 +1,35 @@
 ; Menu generation:       extra_scripts/pre_gen_menu.py + lib/idryer-core/menu/menu_gen.py
 ; [env] +  [flags_*] + [env:*]
+; Важно:
 ; extra_scripts в [env:*] перезапписывает [env],
 ; а не дополняет, поэтому pre + post
 ; нужно указывать явно в каждом env.
 
 [platformio]
-default_envs = esp32c3-devkitm-prod, esp32c3-super-mini-prod, xiao-esp32s3-prod, waveshare-esp32s3-zero-prod
+default_envs = esp32c3-prod, esp32c3-super-mini-prod, xiao-esp32s3-prod, waveshare-esp32s3-zero-prod
 
-; =============================================================================
-; Base settings — shared by all envs
-; =============================================================================
 [env]
 platform = espressif32
 board = esp32-c3-devkitm-1
 framework = arduino
-upload_port = /dev/cu.usbmodem1101
-monitor_port = /dev/cu.usbmodem1101
+upload_port = /dev/cu.usbmodem11101
+monitor_port = /dev/cu.usbmodem11101
 monitor_speed = 115200
 monitor_raw = yes
+
+; Источники продукта: main.cpp, продуктовые модули src/storage/, и
+; автогенерация меню в src/menu/ (заполняется pre_gen_menu.py).
+build_src_filter = +<main.cpp> +<storage/**> +<menu/**>
+
+; -Isrc/menu для разрешения `#include <menu_state.h>` положен ниже,
+; в [flags_c3_usb] / [flags_s3_usb], потому что env-specific build_flags
+; переопределяют базовый [env].build_flags (PIO не дополняет).
+
+; ВНИМАНИЕ: extra_scripts в env-специфичных секциях ПЕРЕЗАПИСЫВАЕТ базовый,
+; не дополняет. Поэтому каждый [env:*] явно перечисляет ОБА хука:
+;   pre:pre_gen_menu.py  — автогенерация меню перед компиляцией
+;   post:copy_firmware.py / stage_auto_claim.py — пост-сборка (env-specific)
+; Базовый extra_scripts тут не указываем, чтобы не путать.
 
 lib_deps =
   bblanchon/ArduinoJson @ ^6.21.3
@@ -28,6 +40,11 @@ lib_deps =
   fastled/FastLED @ ^3.6.0
   robtillaart/SHT31 @ ^0.5.0
 
+; =============================================================================
+; Shared flag groups
+; =============================================================================
+
+; Production cloud endpoints, TLS on
 [flags_prod]
 build_flags =
   -DCORE_DEBUG_LEVEL=0
@@ -45,6 +62,10 @@ build_flags =
   -DMQTT_PORT=1884
   -DMQTT_USE_TLS=0
 
+; Local dev — Mac в роли портала. IP должен совпадать с рабочей машиной.
+;   192.168.0.171 — текущий IP Mac в LAN.
+;   backend:    http://<mac>:3000
+;   mosquitto:  mqtt://<mac>:1883 (anonymous, dev-only)
 [flags_local]
 build_flags =
   -DCORE_DEBUG_LEVEL=3
@@ -71,6 +92,10 @@ build_flags =
   -Iinclude
   -Isrc/menu       ; auto-generated menu headers (см. extra_scripts/pre_gen_menu.py)
 
+; =============================================================================
+; ESP32-C3 DevKitM-1 — Storage Link (production)
+; Pins: LED=4, I2C SDA=8 SCL=9
+; =============================================================================
 [env:esp32c3-devkitm-prod]
 board = esp32-c3-devkitm-1
 upload_port = /dev/cu.usbmodem101
@@ -86,6 +111,9 @@ build_flags =
   -DSTORAGE_I2C_SDA=8
   -DSTORAGE_I2C_SCL=9
 
+; =============================================================================
+; ESP32-C3 DevKitM-1 — Storage Link (staging)
+; =============================================================================
 [env:esp32c3-storage-stage]
 board = esp32-c3-devkitm-1
 upload_port = /dev/cu.usbmodem101
@@ -101,6 +129,11 @@ build_flags =
   -DSTORAGE_I2C_SDA=8
   -DSTORAGE_I2C_SCL=9
 
+; =============================================================================
+; ESP32-C3 Super Mini — Storage Link (production)
+; Same chip as DevKitM-1, different form factor
+; Pins: LED=4, I2C SDA=8 SCL=9
+; =============================================================================
 [env:esp32c3-super-mini-prod]
 board = esp32-c3-devkitm-1
 upload_port = /dev/cu.usbmodem1401
@@ -116,6 +149,9 @@ build_flags =
   -DSTORAGE_I2C_SDA=8
   -DSTORAGE_I2C_SCL=9
 
+; =============================================================================
+; ESP32-C3 Super Mini — Storage Link (staging)
+; =============================================================================
 [env:esp32c3-super-mini-stage]
 board = esp32-c3-devkitm-1
 upload_port = /dev/cu.usbmodem101
@@ -131,6 +167,10 @@ build_flags =
   -DSTORAGE_I2C_SDA=8
   -DSTORAGE_I2C_SCL=9
 
+; =============================================================================
+; ESP32-C3 Super Mini — Storage Link (local dev на Mac)
+; Без copy_firmware (flasher-portal) и без auto_claim — клейм вручную.
+; =============================================================================
 [env:esp32c3-super-mini-local]
 board = esp32-c3-devkitm-1
 upload_port = /dev/cu.usbmodem1401
@@ -145,8 +185,10 @@ build_flags =
   -DSTORAGE_I2C_SDA=8
   -DSTORAGE_I2C_SCL=9
 
-
-; TODO: verify xiao pin assignments on hardware
+; =============================================================================
+; Seeed XIAO ESP32-S3 — Storage Link (production)
+; TODO: verify pin assignments on hardware
+; =============================================================================
 [env:xiao-esp32s3-prod]
 board = seeed_xiao_esp32s3
 extra_scripts =
@@ -160,6 +202,10 @@ build_flags =
   -DSTORAGE_I2C_SDA=5
   -DSTORAGE_I2C_SCL=6
 
+; =============================================================================
+; Seeed XIAO ESP32-S3 — Storage Link (staging)
+; TODO: verify pin assignments on hardware
+; =============================================================================
 [env:xiao-esp32s3-stage]
 board = seeed_xiao_esp32s3
 extra_scripts =
@@ -173,10 +219,13 @@ build_flags =
   -DSTORAGE_I2C_SDA=5
   -DSTORAGE_I2C_SCL=6
 
-
-; TODO: verify  board ID and pin assignments on hardware
+; =============================================================================
+; Waveshare ESP32-S3 Zero — Storage Link (production)
+; Using esp32s3box as closest generic ESP32-S3 board in PlatformIO.
+; TODO: verify board ID and pin assignments on hardware
+; =============================================================================
 [env:waveshare-esp32s3-zero-prod]
-board = esp32s3box ;or esp32-s3-devkitc-1
+board = esp32s3box
 extra_scripts =
   pre:extra_scripts/pre_gen_menu.py
   post:extra_scripts/copy_firmware.py
@@ -188,8 +237,12 @@ build_flags =
   -DSTORAGE_I2C_SDA=8
   -DSTORAGE_I2C_SCL=9
 
+; =============================================================================
+; Waveshare ESP32-S3 Zero — Storage Link (staging)
+; TODO: verify board ID and pin assignments on hardware
+; =============================================================================
 [env:waveshare-esp32s3-zero-stage]
-board = esp32s3box board = esp32s3box ;or esp32-s3-devkitc-1
+board = esp32s3box
 extra_scripts =
   pre:extra_scripts/pre_gen_menu.py
   post:extra_scripts/stage_auto_claim.py
@@ -221,3 +274,15 @@ build_flags =
   -DSTORAGE_I2C_SCL=9
   -DCORE_DEBUG_LEVEL=3       ; override prod=0 для dev-логов
   -DIDRYER_DEV_REPL=1
+
+; =============================================================================
+; Reference envs — NOT compiled by default.
+; Source moved to reference/. Restore build_src_filter when needed.
+;
+; Dryer Link (hardware validation pending):
+;   source → reference/dryer/
+;   UART pins: RX=6 TX=7 (Super Mini) or RX=16 TX=17 (devkit)
+;
+; iHeater (legacy, migration reference):
+;   source → reference/iheater/
+; =============================================================================
