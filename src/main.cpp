@@ -305,6 +305,10 @@ void setup() {
     s_sensorOk = s_sensor.begin();
 
     // 5. Поднимаем стек: WiFi → claim → MQTT → telemetry/status автомат.
+    s_link.onClaimPin([](const char* pin, uint32_t expires) {
+        Serial.printf("CLAIM_PIN:%s:%lu\n", pin, expires);
+        Serial.flush();
+    });
     s_link.begin();
 
     registerCommands();
