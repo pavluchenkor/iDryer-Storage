@@ -283,38 +283,40 @@ static void runCommand(String line) {
 // ─────────────────────────────────────────────────────────────────────
 
 void setup() {
-    // 0. WiFi.persistent(false) — ОБЯЗАТЕЛЬНО ПЕРВОЙ СТРОКОЙ, до bootstrapMenu.
+    // 0. WiFi.persistent(false) — ПЕРВОЙ СТРОКОЙ, до любых NVS-операций.
     //    Иначе Arduino пишет WiFi-config в NVS внутри WiFi.begin() (Improv flow),
     //    конфликтует с открытым menu-NVS-handle и Improv таймаутит.
     WiFi.persistent(false);
 
-    // 1. Меню v3: NVS + дефолты + загрузка + нормализация toggle-групп.
-    //    ДО initLedStrip — нужен chipset / color_order.
-    bootstrapMenu();
-
-    // 2. LED strip: одноразовая FastLED-инициализация.
-    uint16_t ledCount = (menu.led_count > STORAGE_MAX_LEDS)
-                        ? STORAGE_MAX_LEDS
-                        : menu.led_count;
-    initLedStrip(selectedChipset(), selectedColorOrder(), ledCount);
-    applyMenuToExecutor(s_executor);
-    s_executor.setDefaultColor(selectedPulseColor());
-    s_executor.setDefaultDurationSec(pulseDefaultDurationSec());
-
-    // 3. Фоновые анимации.
-    animationsWire(&s_executor);
-    animationsApply();
-
-    // 4. SHT31: опциональный — устройство работает и без него.
-    Wire.begin(STORAGE_I2C_SDA, STORAGE_I2C_SCL);
-    s_sensorOk = s_sensor.begin();
-
-    // 5. Поднимаем стек: WiFi → claim → MQTT → telemetry/status автомат.
+    // 1. SDK + Improv — поднимаем РАНО, чтобы handleSerial был готов
+    //    перехватить байты от portal до того, как остальной setup (тяжёлый NVS,
+    //    FastLED templates, sensor probe) поглотит CPU. Setup должен быть тонким
+    //    "сверху" — медленные init идут после.
     s_link.onClaimPin([](const char* pin, uint32_t expires) {
         Serial.printf("CLAIM_PIN:%s:%lu\n", pin, expires);
         Serial.flush();
     });
     s_link.begin();
+
+    // 2. Меню v3: NVS + дефолты + загрузка + нормализация toggle-групп.
+    //    ДО initLedStrip — нужен chipset / color_order.
+    bootstrapMenu();
+
+    // 3. LED strip.
+    uint16_t ledCount = (menu.led_count > STORAGE_MAX_LEDS) ? STORAGE_MAX_LEDS : menu.led_count;
+    initLedStrip(selectedChipset(), selectedColorOrder(), ledCount);
+    applyMenuToExecutor(s_executor);
+    s_executor.setDefaultColor(selectedPulseColor());
+    s_executor.setDefaultDurationSec(pulseDefaultDurationSec());
+
+    // 4. Фоновые анимации.
+    animationsWire(&s_executor);
+    animationsApply();
+
+    // 5. SHT31: опциональный — устройство работает и без него.
+    //    begin() теперь lazy (probe в первый tick) — setup остаётся быстрым.
+    Wire.begin(STORAGE_I2C_SDA, STORAGE_I2C_SCL);
+    s_sensorOk = s_sensor.begin();
 
     registerCommands();
 

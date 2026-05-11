@@ -48,5 +48,6 @@ private:
     uint32_t      pollMs_;
     uint32_t      prevMs_    = 0;
     uint8_t       foundAddr_ = 0;
+    bool          probeDone_ = false;
     SensorReading last_;
 };
