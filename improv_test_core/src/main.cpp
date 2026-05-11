@@ -7,9 +7,11 @@
 #include <WiFi.h>
 #include <Preferences.h>
 #include <FastLED.h>
+#include <SHT31.h>     // только include — без global / без begin
 #include <iDryer.h>
 
 static CRGB g_leds[300];
+static SHT31 g_sht(0x44, &Wire);   // bisect: global ctor — ломает ли Improv?
 
 static Preferences g_menu_prefs;
 
