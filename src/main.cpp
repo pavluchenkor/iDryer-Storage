@@ -283,6 +283,11 @@ static void runCommand(String line) {
 // ─────────────────────────────────────────────────────────────────────
 
 void setup() {
+    // 0. WiFi.persistent(false) — ОБЯЗАТЕЛЬНО ПЕРВОЙ СТРОКОЙ, до bootstrapMenu.
+    //    Иначе Arduino пишет WiFi-config в NVS внутри WiFi.begin() (Improv flow),
+    //    конфликтует с открытым menu-NVS-handle и Improv таймаутит.
+    WiFi.persistent(false);
+
     // 1. Меню v3: NVS + дефолты + загрузка + нормализация toggle-групп.
     //    ДО initLedStrip — нужен chipset / color_order.
     bootstrapMenu();
