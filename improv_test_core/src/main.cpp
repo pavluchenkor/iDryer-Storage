@@ -3,6 +3,7 @@
 // в namespace "iheater-menu" и НЕ зовёт end(). Имитируем здесь.
 
 #include <Arduino.h>
+#include <Wire.h>
 #include <WiFi.h>
 #include <Preferences.h>
 #include <iDryer.h>
@@ -39,6 +40,9 @@ void setup() {
     WiFi.persistent(false);
 
     g_menu_prefs.begin("iheater-menu", /*readOnly=*/false);
+
+    // Бисект шаг 5: + Wire.begin (I2C SDA=8 SCL=9) — Storage pins.
+    Wire.begin(8, 9);
 
     // Бисект шаг 1: + onClaimPin (stateless лямбда → fnptr, без std::function).
     s_link.onClaimPin([](const char* pin, uint32_t expires) {
