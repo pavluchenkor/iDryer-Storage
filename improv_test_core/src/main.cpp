@@ -51,6 +51,8 @@ void setup() {
 
     // Бисект шаг 7: + FastLED.addLeds (WS2812B на GPIO4, как Storage).
     FastLED.addLeds<WS2812B, 4, GRB>(g_leds, 300);
+    // Бисект шаг 10: + FastLED.clear(true) — как в Storage initLedStrip.
+    FastLED.clear(true);
 
     // Бисект шаг 6: + SHT31.begin (вместо просто ctor).
     g_sht.begin();
@@ -82,4 +84,12 @@ void setup() {
 
 void loop() {
     s_link.loop();
+    // Бисект шаг 8: эмулирую Storage loop — FastLED.show() блокирует ~9мс для 300 LED.
+    FastLED.show();
+    // Бисект шаг 9: SHT31 throttled read (как s_sensor.tick в Storage) — каждые 1с.
+    static uint32_t lastSht = 0;
+    if (millis() - lastSht > 1000) {
+        lastSht = millis();
+        g_sht.read();   // I2C transaction (~15мс)
+    }
 }
