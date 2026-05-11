@@ -6,7 +6,10 @@
 #include <Wire.h>
 #include <WiFi.h>
 #include <Preferences.h>
+#include <FastLED.h>
 #include <iDryer.h>
+
+static CRGB g_leds[300];
 
 static Preferences g_menu_prefs;
 
@@ -43,6 +46,9 @@ void setup() {
 
     // Бисект шаг 5: + Wire.begin (I2C SDA=8 SCL=9) — Storage pins.
     Wire.begin(8, 9);
+
+    // Бисект шаг 7: + FastLED.addLeds (WS2812B на GPIO4, как Storage).
+    FastLED.addLeds<WS2812B, 4, GRB>(g_leds, 300);
 
 
     // Бисект шаг 1: + onClaimPin (stateless лямбда → fnptr, без std::function).
