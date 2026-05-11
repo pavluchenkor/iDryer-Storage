@@ -1,0 +1,81 @@
+// BISECT шаг 1: тот же sketch что РАБОЧИЙ improv_test/main.cpp,
+// ПЛЮС одна вещь — глобальная переменная `iDryer::Link s_link(CFG)`,
+// но БЕЗ вызова s_link.begin() и s_link.loop().
+//
+// Цель: понять, ломает ли само создание Link (конструкторы Impl) Improv,
+// или проблема только в s_link.begin()/s_link.loop().
+//
+// Если этот sketch ПОДКЛЮЧИТСЯ через Improv → проблема в begin/loop.
+// Если TIMEOUT → проблема в глобальной инициализации Impl-структуры
+// (конструкторы MqttClient, CloudStateMachine, LocalAccess и пр.).
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <ImprovWiFiLibrary.h>
+#include <iDryer.h>
+
+ImprovWiFi improv(&Serial);
+bool wifiOk = false;
+
+// Глобальный Link — создаётся через static init, конструктор Impl выполняется
+// ДО setup(). Сам по себе begin()/loop() НЕ вызываются.
+static const iDryer::Config CFG = {
+    .deviceType        = iDryer::DeviceType::StorageLink,
+    .unitsCount        = 1,
+    .hasHeaterPower    = false,
+    .hasFanStatus      = false,
+    .hasLed            = false,
+    .hasScales         = false,
+    .hasRfid           = false,
+    .hasAirTemp        = false,
+    .hasAirHumidity    = false,
+    .hasHeaterTemp     = false,
+    .allowHa           = false,
+    .allowBambu        = false,
+    .allowMoonraker    = false,
+    .telemetryPeriodMs = 0,
+    .statusPeriodMs    = 0,
+    .hardwareVersion   = "1.0",
+    .firmwareVersion   = "1.0.0",
+    .model             = "iDryer Bisect 1",
+};
+static iDryer::Link s_link(CFG);
+
+void onConnected(const char* ssid, const char* /*pass*/) {
+    wifiOk = true;
+    Serial.println();
+    Serial.print("[IMPROV] connected: ");
+    Serial.println(ssid);
+    Serial.print("[IMPROV] IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.flush();
+}
+
+void onError(ImprovTypes::Error err) {
+    Serial.println();
+    Serial.print("[IMPROV] ERROR=");
+    Serial.println((int)err);
+    Serial.flush();
+}
+
+void setup() {
+    Serial.begin(115200);
+
+    improv.setDeviceInfo(
+        ImprovTypes::ChipFamily::CF_ESP32_C3,
+        "iDryer Bisect 1",
+        "1.0.0",
+        "iDryer",
+        "");
+    improv.onImprovConnected(onConnected);
+    improv.onImprovError(onError);
+
+    // Намеренно НЕ вызываем s_link.begin() — это часть bisect-теста.
+    (void)s_link;
+}
+
+void loop() {
+    if (!wifiOk) {
+        improv.handleSerial();
+    }
+}
