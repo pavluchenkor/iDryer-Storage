@@ -39,6 +39,13 @@ void setup() {
     WiFi.persistent(false);
 
     g_menu_prefs.begin("iheater-menu", /*readOnly=*/false);
+
+    // Бисект шаг 1: + onClaimPin (stateless лямбда → fnptr, без std::function).
+    s_link.onClaimPin([](const char* pin, uint32_t expires) {
+        Serial.printf("CLAIM_PIN:%s:%lu\n", pin, expires);
+        Serial.flush();
+    });
+
     s_link.begin();
 }
 
