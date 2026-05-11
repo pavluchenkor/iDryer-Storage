@@ -7,11 +7,11 @@
 #include <WiFi.h>
 #include <Preferences.h>
 #include <FastLED.h>
-#include <SHT31.h>     // только include — без global / без begin
+#include <SHT31.h>
 #include <iDryer.h>
 
 static CRGB g_leds[300];
-static SHT31 g_sht(0x44, &Wire);   // bisect: global ctor — ломает ли Improv?
+static SHT31 g_sht(0x44, &Wire);
 
 static Preferences g_menu_prefs;
 
@@ -51,6 +51,9 @@ void setup() {
 
     // Бисект шаг 7: + FastLED.addLeds (WS2812B на GPIO4, как Storage).
     FastLED.addLeds<WS2812B, 4, GRB>(g_leds, 300);
+
+    // Бисект шаг 6: + SHT31.begin (вместо просто ctor).
+    g_sht.begin();
 
 
     // Бисект шаг 1: + onClaimPin (stateless лямбда → fnptr, без std::function).
