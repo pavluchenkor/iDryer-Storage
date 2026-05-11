@@ -57,6 +57,11 @@ void setup() {
     s_link.onCommand("set", [](JsonObjectConst) {
         Serial.println("[CMD] set");
     });
+
+    // Бисект шаг 4: + onCommand("invoke").
+    s_link.onCommand("invoke", [](JsonObjectConst) {
+        Serial.println("[CMD] invoke");
+    });
 }
 
 void loop() {
