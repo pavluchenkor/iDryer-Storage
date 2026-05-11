@@ -47,6 +47,11 @@ void setup() {
     });
 
     s_link.begin();
+
+    // Бисект шаг 2: + onCommand("get_config") — stateless лямбда.
+    s_link.onCommand("get_config", [](JsonObjectConst) {
+        Serial.println("[CMD] get_config");
+    });
 }
 
 void loop() {
