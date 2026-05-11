@@ -44,6 +44,7 @@ void setup() {
     // Бисект шаг 5: + Wire.begin (I2C SDA=8 SCL=9) — Storage pins.
     Wire.begin(8, 9);
 
+
     // Бисект шаг 1: + onClaimPin (stateless лямбда → fnptr, без std::function).
     s_link.onClaimPin([](const char* pin, uint32_t expires) {
         Serial.printf("CLAIM_PIN:%s:%lu\n", pin, expires);
