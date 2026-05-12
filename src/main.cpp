@@ -196,6 +196,18 @@ static void registerCommands() {
         // led.pulse, led.animation — LED-лента знает свой набор action'ов.
         s_executor.execute(action, data["args"]);
     });
+
+    // Авто-публикация меню при первом выходе в онлайн.
+    // Портал подписывается на /config при открытии карточки устройства —
+    // retained-сообщение даёт ему актуальное меню без явного get_config.
+    s_link.every(2000, []() {
+        static bool s_wasOnline = false;
+        const bool online = s_link.isOnline();
+        if (online && !s_wasOnline) {
+            publishFullMenu();
+        }
+        s_wasOnline = online;
+    });
 }
 
 // ─── REPL (dev only) ────────────────────────────────────────────────────
