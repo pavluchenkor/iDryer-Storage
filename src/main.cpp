@@ -70,7 +70,7 @@ static const iDryer::Config CFG = {
 
     // Название продукта — отображается в колонке «Тип» на странице устройств.
     // Задаётся свободно: любая строка UTF-8.
-    .model             = "iDryer Storage",
+    .model             = "Storage",
 };
 
 static iDryer::Link s_link(CFG);
