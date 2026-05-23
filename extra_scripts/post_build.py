@@ -139,7 +139,7 @@ def _write_json(path: str, data: dict):
 
 
 def _make_manifest(board: str, version: str, slot: str) -> dict:
-    base = f"firmware/{PRODUCT_NAME}/{slot}/{board}/v{version}"
+    base = f"/firmware/{PRODUCT_NAME}/{slot}/{board}/v{version}"
     return {
         "name": _board_label(board),
         "version": version,
