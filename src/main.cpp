@@ -177,6 +177,16 @@ static void onMenuChanged() {
   animationsApply();
 }
 
+// menu_protocol_v1: action-callback для invoke {id} из DeviceMenu портала.
+// Перекрывает weak-stub в menu_callbacks_weak.cpp. Триггерит pulse без args —
+// executor сам подставит цвет (из toggle-группы pulse_*color) и длительность
+// (pulse_dur_sec), которые уже настроены через setDefaultColor/Duration
+// в onMenuChanged.
+extern "C" void led_pulse(void) {
+  StaticJsonDocument<16> empty;
+  s_executor.execute("led.pulse", empty.as<JsonObjectConst>());
+}
+
 // ── Полный config из меню → MQTT + Local WS ──────────────────────────
 // Один вызов — два транспорта (s_link.devicePublisher() — dual-publish helper).
 static void publishFullMenu() {
