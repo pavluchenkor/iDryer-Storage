@@ -368,6 +368,15 @@ void setup() {
   Wire.begin(STORAGE_I2C_SDA, STORAGE_I2C_SCL);
   s_sensorOk = s_sensor.begin();
 
+  // Initial state — NAN ⇒ SDK публикует null в telemetry (вместо 0.0).
+  // Если SHT31 не нашёлся ИЛИ ни одного валидного reading'а ещё не было —
+  // в payload приходит {"temperature": null, "humidity": null} → frontend
+  // не рисует эти поля (TelemetryRow скрывает cells с value=null).
+  for (uint8_t i = 0; i < iDryer::MAX_UNITS; i++) {
+    s_link.telemetry.airTempC[i]      = NAN;
+    s_link.telemetry.airHumidityPct[i] = NAN;
+  }
+
   registerCommands();
 
 #ifdef IDRYER_DEV_REPL
@@ -389,6 +398,10 @@ void loop() {
       s_link.telemetry.airTempC[0] = r.temperature;
       s_link.telemetry.airHumidityPct[0] =
           r.humidity; // публикуются по telemetryPeriodMs
+    } else {
+      // Reading failed → NAN ⇒ SDK публикует null (frontend не рисует поле).
+      s_link.telemetry.airTempC[0]      = NAN;
+      s_link.telemetry.airHumidityPct[0] = NAN;
     }
   }
 
