@@ -13,7 +13,7 @@ Pre-build hook: автогенерация меню из src/menu/menu.yaml.
 Где что лежит:
   src/menu/menu.yaml                    ← source of truth (правит разработчик)
   src/menu/menu_*.{h,cpp}               ← autogen (НЕ редактировать)
-  src/menu/menu_commands.{h,cpp}        ← runtime helper (hand-written)
+  lib/idryer-core/src/menu_commands.h   ← runtime helper (header-only, общий для всех продуктов)
   lib/idryer-core/menu/menu_gen.py      ← общий генератор (часть core)
   lib/idryer-core/menu/menu.template.yaml  ← шаблон для нового продукта
 
@@ -68,9 +68,8 @@ def _ensure_pyyaml() -> None:
 def _needs_regen() -> bool:
     """True если menu.yaml новее autogen-маркера, или маркер отсутствует.
 
-    Сравниваем только с одним autogen-файлом (menu_state.cpp), а не с min(*) по
-    всей папке — иначе hand-written menu_commands.{h,cpp} с их git-mtime ронят
-    проверку и заставляют регенерировать каждую сборку.
+    Сравниваем с одним autogen-файлом (menu_state.cpp), а не с min(*) по всей
+    папке — так стабильнее и не зависит от git-mtime посторонних файлов.
     """
     marker = OUT_DIR / "menu_state.cpp"
     if not marker.exists():
