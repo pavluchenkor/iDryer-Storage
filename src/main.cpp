@@ -50,10 +50,10 @@ static const iDryer::Config CFG = {
     .deviceType = iDryer::DeviceType::StorageLink,
     .unitsCount = 1,
 
-    .hasHeaterPower = false,
-    .hasFanStatus = false,
+    .hasHeater = false,
+    .hasFan = false,
     .hasLed = true,
-    .hasScales = false,
+    .hasWeight = false,
     .hasRfid = false,
     .hasAirTemp = true, // SHT31 (опционально, при отсутствии — 0)
     .hasAirHumidity = true,
