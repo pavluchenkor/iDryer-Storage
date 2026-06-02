@@ -46,6 +46,7 @@ public:
   bool pulse_magenta = false;
   bool pulse_white = true;
   uint16_t pulse_dur_sec = (uint16_t)30;
+  bool ign_ext_cmd = false;
   uint8_t units_count = (uint8_t)1;
   uint8_t language = (uint8_t)1;
 

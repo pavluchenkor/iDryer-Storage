@@ -45,6 +45,7 @@ void MenuState::initDefaults(){
   this->pulse_magenta = false;
   this->pulse_white = true;
   this->pulse_dur_sec = (uint16_t)30;
+  this->ign_ext_cmd = false;
   this->units_count = (uint8_t)1;
   this->language = (uint8_t)1;
 }
@@ -97,6 +98,7 @@ void MenuState::loadFromNVS(){
   ee_read("pulse_magenta", this->pulse_magenta);
   ee_read("pulse_white", this->pulse_white);
   ee_read("pulse_dur_sec", this->pulse_dur_sec);
+  ee_read("ign_ext_cmd", this->ign_ext_cmd);
   ee_read("units_count", this->units_count);
   ee_read("language", this->language);
   menu_nvs_end();
@@ -144,6 +146,7 @@ void MenuState::saveToNVS(){
   ee_store_field("pulse_magenta", this->pulse_magenta);
   ee_store_field("pulse_white", this->pulse_white);
   ee_store_field("pulse_dur_sec", this->pulse_dur_sec);
+  ee_store_field("ign_ext_cmd", this->ign_ext_cmd);
   ee_store_field("units_count", this->units_count);
   ee_store_field("language", this->language);
   menu_nvs_end();

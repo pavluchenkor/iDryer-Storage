@@ -51,6 +51,7 @@ const MenuBinding g_bindings[] = {
   {MENU_PULSE_MAGENTA, "pulse_magenta", VT_BOOL, (void*)&menu.pulse_magenta, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_PULSE_WHITE, "pulse_white", VT_BOOL, (void*)&menu.pulse_white, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_PULSE_DURATION, "pulse_dur_sec", VT_U16, (void*)&menu.pulse_dur_sec, true, nullptr, false, SCOPE_GLOBAL},
+  {MENU_IGNORE_EXTERNAL_CMD, "ign_ext_cmd", VT_BOOL, (void*)&menu.ign_ext_cmd, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_UNITS_COUNT, "units_count", VT_U8, (void*)&menu.units_count, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_LANGUAGE, "language", VT_U8, (void*)&menu.language, true, nullptr, false, SCOPE_GLOBAL},
 };
