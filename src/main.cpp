@@ -221,20 +221,25 @@ static void registerCommands() {
       val = (int)data["val"].as<float>();
 
     // Системный toggle ignore_external_cmd — обрабатываем здесь, до
-    // LED-specific applyConfigChange. Маппим id → bind через g_bindings,
-    // чтобы не зависеть от константы MENU_* (генерится из yaml).
-    if (id >= 0 && val >= 0) {
+    // LED-specific applyConfigChange. Поддерживаем обе формы: bind="ign_ext_cmd"
+    // (приходит от портала и при снятии гейта через MQTT) и id-форму.
+    const bool byBind =
+        data["bind"].is<const char*>() &&
+        strcmp(data["bind"].as<const char*>(), "ign_ext_cmd") == 0;
+    bool byId = false;
+    if (!byBind && id >= 0) {
       for (uint16_t i = 0; i < g_bindings_count; i++) {
         if (g_bindings[i].id != (uint16_t)id) continue;
-        if (strcmp(g_bindings[i].bind, "ign_ext_cmd") == 0) {
-          bool flag = (val != 0);
-          menu_apply_by_bind("ign_ext_cmd", flag ? 1.0f : 0.0f);
-          s_link.setIgnoreExternalCmd(flag);
-          publishFullMenu();
-          return;
-        }
+        byId = (strcmp(g_bindings[i].bind, "ign_ext_cmd") == 0);
         break;
       }
+    }
+    if ((byBind || byId) && val >= 0) {
+      bool flag = (val != 0);
+      menu_apply_by_bind("ign_ext_cmd", flag ? 1.0f : 0.0f);
+      s_link.setIgnoreExternalCmd(flag);
+      publishFullMenu();
+      return;
     }
 
     if (id >= 0 && val >= 0 &&
