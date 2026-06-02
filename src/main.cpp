@@ -166,6 +166,12 @@ static void bootstrapMenu() {
   // Синхронизирует MenuState → g_menu_cache; без этого get_config вернёт
   // дефолты вместо NVS-значений.
   menu_sync_state_to_cache();
+
+  // Стандартный SDK-toggle: применяем стартовое значение из NVS в SDK-gate.
+  bool ignoreExt = false;
+  if (menu_read_by_bind("ign_ext_cmd", &ignoreExt)) {
+    s_link.setIgnoreExternalCmd(ignoreExt);
+  }
 }
 
 // Обновляет executor и анимации после изменения параметров меню.
@@ -213,6 +219,23 @@ static void registerCommands() {
       val = data["val"].as<int>();
     else if (data["val"].is<float>())
       val = (int)data["val"].as<float>();
+
+    // Системный toggle ignore_external_cmd — обрабатываем здесь, до
+    // LED-specific applyConfigChange. Маппим id → bind через g_bindings,
+    // чтобы не зависеть от константы MENU_* (генерится из yaml).
+    if (id >= 0 && val >= 0) {
+      for (uint16_t i = 0; i < g_bindings_count; i++) {
+        if (g_bindings[i].id != (uint16_t)id) continue;
+        if (strcmp(g_bindings[i].bind, "ign_ext_cmd") == 0) {
+          bool flag = (val != 0);
+          menu_apply_by_bind("ign_ext_cmd", flag ? 1.0f : 0.0f);
+          s_link.setIgnoreExternalCmd(flag);
+          publishFullMenu();
+          return;
+        }
+        break;
+      }
+    }
 
     if (id >= 0 && val >= 0 &&
         applyConfigChange(id, val, s_executor, onMenuChanged)) {

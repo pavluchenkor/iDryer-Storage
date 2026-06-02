@@ -383,6 +383,17 @@
       role: led.pulse
       widget: LedPulse
 
+    # ─── Стандартный SDK-toggle: игнор внешних команд ────────────
+    - id: ignore_external_cmd
+      type: toggle
+      title: { ru: "ИГНОР. ВНЕШ. КОМАНД", en: "IGNOR EXT CMD" }
+      vtype: bool
+      bind: ign_ext_cmd
+      role: system.ignore_external_cmd
+      persist: true
+      scope: global
+      default: false
+
     - id: units_count
       type: value
       title: { ru: "КОЛ-ВО ЮНИТОВ", en: "UNITS" }
