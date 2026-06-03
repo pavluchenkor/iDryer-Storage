@@ -178,6 +178,10 @@ void animationsClearOverride() {
     recomputeEffective();
 }
 
+bool animationsIsOverrideActive() {
+    return g_overrideActive && g_overrideEnabled;
+}
+
 void animationsLoop(uint32_t nowMs) {
     if (!g_exec) return;
 

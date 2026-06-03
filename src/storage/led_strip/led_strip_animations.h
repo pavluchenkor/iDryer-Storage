@@ -77,6 +77,10 @@ void animationsOverride(bool enabled, AnimKind anim, const CRGB& color);
 // Эквивалент тому что делает animationsApply при онменю-change.
 void animationsClearOverride();
 
+// true когда лента под override и в нём включена анимация (long-running).
+// Используется main.cpp чтобы выставить status.mode = LightAnimation/Idle.
+bool animationsIsOverrideActive();
+
 // ── Loop ────────────────────────────────────────────────────────────
 
 // Один тик. Вызывать в каждой итерации loop(). Сам дросселирует частоту кадров.

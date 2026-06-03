@@ -262,6 +262,18 @@ static void registerCommands() {
     }
     // led.pulse, led.animation — LED-лента знает свой набор action'ов.
     s_executor.execute(action, data["args"]);
+
+    // Sync status.mode с override-состоянием анимаций: long-running override
+    // (солид/breathe/wave/rainbow на всю ленту) — это LightAnimation,
+    // отсутствие override (или ZONE pulse) — IDLE. Publish триггерится
+    // только при смене mode чтобы не шуметь.
+    const auto newMode = animationsIsOverrideActive()
+                             ? iDryer::UnitMode::LightAnimation
+                             : iDryer::UnitMode::Idle;
+    if (s_link.status.mode[0] != newMode) {
+      s_link.status.mode[0] = newMode;
+      s_link.publishStatusNow();
+    }
   });
 
   // Авто-публикация меню при первом выходе в онлайн.
