@@ -10,13 +10,13 @@ Current product responsibilities:
 
 Russian product docs are the primary source of truth:
 
-- [docs/ru/README.md](ru/README.md)
+- [docs/ru/README.md](../ru/README.md)
 
 Key sections:
 
-- [guide](ru/guide/README.md)
-- [LED control](ru/features/led-control.md)
-- [Climate sensor](ru/features/climate-sensor.md)
-- [MQTT commands](ru/protocol/mqtt-commands.md)
-- [Local WebSocket access](ru/protocol/local-access.md)
-- [Hardware and build](ru/reference/hardware-and-build.md)
+- [guide](../ru/guide/README.md)
+- [LED control](../ru/features/led-control.md)
+- [Climate sensor](../ru/features/climate-sensor.md)
+- [MQTT commands](../ru/protocol/mqtt-commands.md)
+- [Local WebSocket access](../ru/protocol/local-access.md)
+- [Hardware and build](../ru/reference/hardware-and-build.md)

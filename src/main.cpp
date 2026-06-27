@@ -7,6 +7,7 @@
 #include <Wire.h>
 #include <iDryer.h>
 #include <local_access/device_publisher.h>
+#include <ota_receiver.h>
 #include <runtime/idryer_runtime.h>
 #include <version.h>
 
@@ -386,6 +387,11 @@ void setup() {
     Serial.flush();
   });
   s_link.begin();
+
+  // Phase 6 OTA: регистрируем приёмник прошивки СРАЗУ после link.begin().
+  // markCurrentBootValid отменяет bootloader rollback после успешного boot.
+  idryer::OtaReceiver::instance().begin(&s_link, "storage_link");
+  idryer::OtaReceiver::markCurrentBootValid();
 
   // 2. Меню v3: NVS + дефолты + загрузка + нормализация toggle-групп.
   //    ДО initLedStrip — нужен chipset / color_order.
