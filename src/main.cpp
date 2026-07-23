@@ -388,6 +388,10 @@ void setup() {
   });
   s_link.begin();
 
+  // Не шлём device-timestamp в publish: портал хранит своё серверное время
+  // приёма, device-timestamp избыточен (экономия трафика). См. MqttClient.
+  s_link.mqttClient()->setAddTimestamp(false);
+
   // Phase 6 OTA: регистрируем приёмник прошивки СРАЗУ после link.begin().
   // markCurrentBootValid отменяет bootloader rollback после успешного boot.
   idryer::OtaReceiver::instance().begin(&s_link, "storage_link");
