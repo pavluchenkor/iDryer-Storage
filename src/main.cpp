@@ -64,7 +64,8 @@ static const iDryer::Config CFG = {
     .allowBambu = false,
     .allowMoonraker = false,
 
-    .telemetryPeriodMs = 10000,
+    .telemetryPeriodMs = 30000,
+    .telemetryPeriodIdleMs = 60000,
     .statusPeriodMs = 0, // Storage не публикует status
 
     .hardwareVersion = "1.0",
