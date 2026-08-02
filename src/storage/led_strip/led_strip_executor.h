@@ -38,10 +38,11 @@ public:
     int32_t  getActiveLed()        const { return activeStart_; }   // legacy: первый LED активной зоны
     int32_t  getActiveStart()      const { return activeStart_; }
     uint16_t getActiveCount()      const { return activeCount_; }
+    CRGB     getActiveColor()      const { return activeColor_; }
     uint32_t getRemainingSeconds() const;
     bool     isPulseActive()       const { return activeStart_ >= 0; }
 
-    // Доступ для анимационного движка (он пишет в leds[] когда нет активного pulse).
+    // Доступ для анимационного движка (он рисует фон и накладывает активную зону поверх).
     CRGB*    leds()        const         { return leds_; }
     uint16_t ledsCount()   const         { return ledsCount_; }
 
@@ -61,6 +62,7 @@ private:
     int32_t  activeStart_  = -1;
     uint16_t activeCount_  = 0;
     uint32_t offAt_        = 0;
+    CRGB     activeColor_  = CRGB::White;
 
     // Defaults для led.pulse, если portal не передал args.color / args.durationSec.
     CRGB     defaultColor_     = CRGB::White;

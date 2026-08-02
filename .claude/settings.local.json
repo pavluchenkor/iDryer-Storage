@@ -205,7 +205,9 @@
       "Read(//tmp/**)",
       "Bash(wait)",
       "Bash(read line *)",
-      "Bash(ping -c 3 192.168.0.140)"
+      "Bash(ping -c 3 192.168.0.140)",
+      "Read(//Users/ruslanpavlucenko/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/f5b4c598-3daa-4442-9d04-d7521aa6ab50/35b03dde-8a58-49b2-a17a-e664a8732634/skills/xlsx/**)",
+      "Bash(markitdown /Users/ruslanpavlucenko/Documents/filament-affiliate/tracker.xlsx)"
     ]
   }
 }

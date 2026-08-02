@@ -440,7 +440,7 @@ void loop() {
   s_executor.loop(); // off-by-timer для led.pulse
 
   animationsLoop(
-      millis()); // не запускается пока активен pulse (проверяет внутри)
+      millis()); // фон каждый кадр; активная pulse-зона накладывается поверх
 
   if (s_sensorOk) {
     s_sensor.tick(millis());

@@ -27,8 +27,12 @@ void LedStripExecutor::setMaxCurrentMa(uint16_t mA) {
 }
 
 void LedStripExecutor::setBrightness(uint8_t brightness) {
-    FastLED.setBrightness(brightness);
-    HAL_LOG_INFO("LED", "brightness=%u", (unsigned)brightness);
+    // Гамма-коррекция: глаз воспринимает свет логарифмически, поэтому линейный
+    // PWM «прыгает» внизу шкалы и почти не меняется вверху. dim8_video —
+    // квадратичная кривая из lib8tion; ненулевой вход не гаснет в ноль.
+    uint8_t pwm = dim8_video(brightness);
+    FastLED.setBrightness(pwm);
+    HAL_LOG_INFO("LED", "brightness=%u (pwm=%u)", (unsigned)brightness, (unsigned)pwm);
 }
 
 void LedStripExecutor::setDefaultColor(CRGB color) {
@@ -108,13 +112,8 @@ void LedStripExecutor::handlePulse(JsonObjectConst args) {
                  ledIndex, ledIndex + ledCount - 1, durationSec,
                  color.r, color.g, color.b);
 
-    // Гасим предыдущую активную зону (если была).
-    if (activeStart_ >= 0) {
-        for (uint16_t i = 0; i < activeCount_; i++) {
-            uint16_t idx = (uint16_t)activeStart_ + i;
-            if (idx < ledsCount_) leds_[idx] = CRGB::Black;
-        }
-    }
+    // Предыдущую зону не гасим: animationsLoop рисует фон каждый кадр и
+    // плавно растворит её в подсветку (nblend).
 
     if (durationSec == 0) {
         // Явное выключение зоны.
@@ -127,6 +126,7 @@ void LedStripExecutor::handlePulse(JsonObjectConst args) {
         }
         activeStart_ = ledIndex;
         activeCount_ = (uint16_t)ledCount;
+        activeColor_ = color;
         offAt_       = HAL_MILLIS() + (uint32_t)durationSec * 1000u;
     }
 
@@ -138,13 +138,7 @@ void LedStripExecutor::handleAnimation(JsonObjectConst args) {
 }
 
 void LedStripExecutor::turnOff() {
-    if (activeStart_ >= 0) {
-        for (uint16_t i = 0; i < activeCount_; i++) {
-            uint16_t idx = (uint16_t)activeStart_ + i;
-            if (idx < ledsCount_) leds_[idx] = CRGB::Black;
-        }
-        FastLED.show();
-    }
+    // Пиксели зоны не трогаем: animationsLoop плавно вернёт фон (nblend).
     activeStart_ = -1;
     activeCount_ = 0;
     offAt_       = 0;

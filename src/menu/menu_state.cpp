@@ -28,6 +28,7 @@ void MenuState::initDefaults(){
   this->anim_breathe = false;
   this->anim_wave = true;
   this->anim_rainbow = false;
+  this->anim_twinkle = false;
   this->idle_red = false;
   this->idle_orange = false;
   this->idle_yellow = false;
@@ -81,6 +82,7 @@ void MenuState::loadFromNVS(){
   ee_read("anim_breathe", this->anim_breathe);
   ee_read("anim_wave", this->anim_wave);
   ee_read("anim_rainbow", this->anim_rainbow);
+  ee_read("anim_twinkle", this->anim_twinkle);
   ee_read("idle_red", this->idle_red);
   ee_read("idle_orange", this->idle_orange);
   ee_read("idle_yellow", this->idle_yellow);
@@ -129,6 +131,7 @@ void MenuState::saveToNVS(){
   ee_store_field("anim_breathe", this->anim_breathe);
   ee_store_field("anim_wave", this->anim_wave);
   ee_store_field("anim_rainbow", this->anim_rainbow);
+  ee_store_field("anim_twinkle", this->anim_twinkle);
   ee_store_field("idle_red", this->idle_red);
   ee_store_field("idle_orange", this->idle_orange);
   ee_store_field("idle_yellow", this->idle_yellow);

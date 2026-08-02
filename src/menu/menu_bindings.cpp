@@ -34,6 +34,7 @@ const MenuBinding g_bindings[] = {
   {MENU_ANIM_BREATHE, "anim_breathe", VT_BOOL, (void*)&menu.anim_breathe, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_ANIM_WAVE, "anim_wave", VT_BOOL, (void*)&menu.anim_wave, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_ANIM_RAINBOW, "anim_rainbow", VT_BOOL, (void*)&menu.anim_rainbow, true, nullptr, false, SCOPE_GLOBAL},
+  {MENU_ANIM_TWINKLE, "anim_twinkle", VT_BOOL, (void*)&menu.anim_twinkle, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_IDLE_RED, "idle_red", VT_BOOL, (void*)&menu.idle_red, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_IDLE_ORANGE, "idle_orange", VT_BOOL, (void*)&menu.idle_orange, true, nullptr, false, SCOPE_GLOBAL},
   {MENU_IDLE_YELLOW, "idle_yellow", VT_BOOL, (void*)&menu.idle_yellow, true, nullptr, false, SCOPE_GLOBAL},

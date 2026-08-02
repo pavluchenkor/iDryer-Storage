@@ -214,6 +214,14 @@
               persist: true
               scope: global
               default: false
+            - id: anim_twinkle
+              type: toggle
+              title: { ru: "Мерцание", en: "Twinkle" }
+              vtype: bool
+              bind: anim_twinkle
+              persist: true
+              scope: global
+              default: false
 
         # Цвет фоновой анимации. Игнорируется для Rainbow.
         - id: idle_color_group

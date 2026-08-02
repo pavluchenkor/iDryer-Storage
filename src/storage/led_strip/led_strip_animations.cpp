@@ -185,12 +185,6 @@ bool animationsIsOverrideActive() {
 void animationsLoop(uint32_t nowMs) {
     if (!g_exec) return;
 
-    // Pulse-зона имеет приоритет — пока активна, не трогаем ленту.
-    if (g_exec->isPulseActive()) {
-        g_lastFrameMs = 0;                 // при возврате в idle сразу нарисуем
-        return;
-    }
-
     // Дросселируем кадры до ~30 fps.
     if (nowMs - g_lastFrameMs < kFrameIntervalMs) return;
     g_lastFrameMs = nowMs;
@@ -212,6 +206,18 @@ void animationsLoop(uint32_t nowMs) {
             case AnimKind::Wave:    renderWave(target,    n, phase, g_color); break;
             case AnimKind::Rainbow: renderRainbow(target, n, phase, g_color); break;
             case AnimKind::Twinkle: renderTwinkle(target, n, phase, g_color); break;
+        }
+    }
+
+    // Активная pulse-зона накладывается поверх фона: остальная лента живёт,
+    // а вытесненная или истёкшая зона плавно растворяется в подсветку.
+    if (g_exec->isPulseActive()) {
+        int32_t  start = g_exec->getActiveStart();
+        uint16_t count = g_exec->getActiveCount();
+        CRGB     color = g_exec->getActiveColor();
+        for (uint16_t i = 0; i < count; i++) {
+            uint32_t idx = (uint32_t)start + i;
+            if (idx < n) target[idx] = color;
         }
     }
 
