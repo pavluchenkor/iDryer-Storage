@@ -33,6 +33,13 @@ constexpr uint32_t kFrameIntervalMs = 33;   // ~30 fps
 constexpr fract8 kBlendStep = 32;
 
 // Параметры анимаций (захардкожены).
+
+// Пульсация активной pulse-зоны (led.pulse): синус яркости между
+// Min и Max за период. Подбираются по вкусу.
+constexpr uint32_t kZonePulsePeriodMs = 1200;   // период полного цикла, мс
+constexpr uint8_t  kZonePulseMin      = 70;     // нижний уровень яркости (0-255)
+constexpr uint8_t  kZonePulseMax      = 255;    // верхний уровень яркости (0-255)
+
 constexpr uint32_t kBreathePeriodMs   = 4000;   // 4 сек период дыхания
 constexpr float    kBreatheMin        = 0.20f;  // 20% min яркости
 constexpr float    kBreatheMax        = 1.00f;  // 100% max
@@ -209,20 +216,26 @@ void animationsLoop(uint32_t nowMs) {
         }
     }
 
-    // Активная pulse-зона накладывается поверх фона: остальная лента живёт,
-    // а вытесненная или истёкшая зона плавно растворяется в подсветку.
+    // Плавный кроссфейд из текущего leds[] в target[]. ~500 мс при 30 fps.
+    // Вытесненная или истёкшая pulse-зона растворяется в фон этим же nblend.
+    nblend(leds, target, n, kBlendStep);
+
+    // Активная pulse-зона рисуется поверх напрямую (мимо nblend, иначе он
+    // сгладил бы пульсацию): яркость дышит синусом Min..Max за PeriodMs.
     if (g_exec->isPulseActive()) {
         int32_t  start = g_exec->getActiveStart();
         uint16_t count = g_exec->getActiveCount();
         CRGB     color = g_exec->getActiveColor();
+        uint8_t  s     = sin8((uint16_t)((uint64_t)nowMs * 256u / kZonePulsePeriodMs));
+        uint8_t  scale = kZonePulseMin +
+                         (uint8_t)(((uint16_t)(kZonePulseMax - kZonePulseMin) * s) / 255);
+        color.nscale8_video(scale);
         for (uint16_t i = 0; i < count; i++) {
             uint32_t idx = (uint32_t)start + i;
-            if (idx < n) target[idx] = color;
+            if (idx < n) leds[idx] = color;
         }
     }
 
-    // Плавный кроссфейд из текущего leds[] в target[]. ~500 мс при 30 fps.
-    nblend(leds, target, n, kBlendStep);
     FastLED.show();
 }
 
