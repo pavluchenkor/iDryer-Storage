@@ -21,6 +21,7 @@
 // Always include WiFi for diagnostic dump (RSSI, IP).
 #include <WiFi.h>
 
+#include "HWCDC.h"
 #include "storage/led_strip/led_strip_animations.h"
 #include "storage/led_strip/led_strip_executor.h"
 #include "storage/led_strip/led_strip_menu.h"
@@ -135,7 +136,8 @@ static void initLedStrip(uint8_t chipset, uint8_t order, uint16_t count) {
     ADD_CHIPSET(WS2813, order, count);
     break;
   case 3:
-    ADD_CHIPSET(WS2815, order, count);
+    ADD_CHIPSET(WS2812, order, count); // TODO ADD_CHIPSET(WS2815, order,
+                                       // count);
     break;
   case 4:
     ADD_CHIPSET(SK6812, order, count);
@@ -223,15 +225,17 @@ static void registerCommands() {
       val = (int)data["val"].as<float>();
 
     // Системный toggle ignore_external_cmd — обрабатываем здесь, до
-    // LED-specific applyConfigChange. Поддерживаем обе формы: bind="ign_ext_cmd"
-    // (приходит от портала и при снятии гейта через MQTT) и id-форму.
+    // LED-specific applyConfigChange. Поддерживаем обе формы:
+    // bind="ign_ext_cmd" (приходит от портала и при снятии гейта через MQTT) и
+    // id-форму.
     const bool byBind =
-        data["bind"].is<const char*>() &&
-        strcmp(data["bind"].as<const char*>(), "ign_ext_cmd") == 0;
+        data["bind"].is<const char *>() &&
+        strcmp(data["bind"].as<const char *>(), "ign_ext_cmd") == 0;
     bool byId = false;
     if (!byBind && id >= 0) {
       for (uint16_t i = 0; i < g_bindings_count; i++) {
-        if (g_bindings[i].id != (uint16_t)id) continue;
+        if (g_bindings[i].id != (uint16_t)id)
+          continue;
         byId = (strcmp(g_bindings[i].bind, "ign_ext_cmd") == 0);
         break;
       }
@@ -418,13 +422,14 @@ void setup() {
   //    begin() теперь lazy (probe в первый tick) — setup остаётся быстрым.
   Wire.begin(STORAGE_I2C_SDA, STORAGE_I2C_SCL);
   s_sensorOk = s_sensor.begin();
+  Serial.printf("Sensor Status: %d\n", s_sensorOk);
 
   // Initial state — NAN ⇒ SDK публикует null в telemetry (вместо 0.0).
   // Если SHT31 не нашёлся ИЛИ ни одного валидного reading'а ещё не было —
   // в payload приходит {"temperature": null, "humidity": null} → frontend
   // не рисует эти поля (TelemetryRow скрывает cells с value=null).
   for (uint8_t i = 0; i < iDryer::MAX_UNITS; i++) {
-    s_link.telemetry.airTempC[i]      = NAN;
+    s_link.telemetry.airTempC[i] = NAN;
     s_link.telemetry.airHumidityPct[i] = NAN;
   }
 
@@ -440,7 +445,7 @@ void loop() {
   s_executor.loop(); // off-by-timer для led.pulse
 
   animationsLoop(
-      millis()); // фон каждый кадр; активная pulse-зона накладывается поверх
+      millis()); // не запускается пока активен pulse (проверяет внутри)
 
   if (s_sensorOk) {
     s_sensor.tick(millis());
@@ -450,8 +455,9 @@ void loop() {
       s_link.telemetry.airHumidityPct[0] =
           r.humidity; // публикуются по telemetryPeriodMs
     } else {
+      // Serial.print("Failed to read sensor data\n");
       // Reading failed → NAN ⇒ SDK публикует null (frontend не рисует поле).
-      s_link.telemetry.airTempC[0]      = NAN;
+      s_link.telemetry.airTempC[0] = NAN;
       s_link.telemetry.airHumidityPct[0] = NAN;
     }
   }
