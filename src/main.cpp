@@ -213,6 +213,9 @@ static void publishFullMenu() {
 // (ping и др.) — в либе.
 static void registerCommands() {
   s_link.onCommand("get_config", [](JsonObjectConst) { publishFullMenu(); });
+  // binding-v3: портал отвязал устройство (retained REVOKE) → стереть секрет,
+  // вернуться к ожиданию токена привязки (SETUP).
+  s_link.onCommand("revoke", [](JsonObjectConst) { s_link.handleRevoke(); });
 
   s_link.onCommand("set", [](JsonObjectConst data) {
     int id = data["id"] | -1;
