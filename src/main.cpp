@@ -334,17 +334,6 @@ static void runCommand(String line) {
     cmdStatus();
     return;
   }
-  if (line.equalsIgnoreCase("claim") || line.equalsIgnoreCase("START_CLAIM")) {
-    // Протокол загрузчика: отвечаем CLAIM_ALREADY или CLAIM_STARTED.
-    if (s_link.isOnline()) {
-      Serial.printf("CLAIM_ALREADY:%s\n", s_link.serial());
-    } else {
-      bool ok = s_link.requestClaim();
-      Serial.println(ok ? "CLAIM_STARTED:OK" : "CLAIM_STARTED:ERROR");
-    }
-    Serial.flush();
-    return;
-  }
   if (line.equalsIgnoreCase("wipe")) {
     Serial.println("[wipe] erasing NVS + reboot…");
     Serial.flush();
@@ -390,10 +379,6 @@ void setup() {
   //    перехватить байты от portal до того, как остальной setup (тяжёлый NVS,
   //    FastLED templates, sensor probe) поглотит CPU. Setup должен быть тонким
   //    "сверху" — медленные init идут после.
-  s_link.onClaimPin([](const char *pin, uint32_t expires) {
-    Serial.printf("CLAIM_PIN:%s:%lu\n", pin, expires);
-    Serial.flush();
-  });
   s_link.begin();
 
   // Не шлём device-timestamp в publish: портал хранит своё серверное время
