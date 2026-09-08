@@ -69,6 +69,11 @@ static const iDryer::Config CFG = {
     .telemetryPeriodIdleMs = 60000,
     .statusPeriodMs = 0, // Storage не публикует status
 
+    // Подсветка — работа декоративная и сама никогда не закончится, поэтому
+    // ради обновления её можно прервать. Значение из контракта
+    // (device_profiles.storage_link.ota_interrupt), хардкодить не нужно.
+    .otaInterrupt = iDryer::OTA_INTERRUPT_STORAGE_LINK,
+
     .hardwareVersion = "1.0",
     .firmwareVersion = VERSION_STR,
 
@@ -405,6 +410,17 @@ void setup() {
   // 4. Фоновые анимации.
   animationsWire(&s_executor);
   animationsApply();
+
+  // Обновление прошивки: гасим ленту на время загрузки.
+  //
+  // Не ради красоты: с работающей анимацией FastLED занимает цикл, MQTT
+  // обрабатывается урывками, и загрузка встаёт — на стенде она не доходила
+  // дальше сотни кусков из 311, а с погашенной лентой укладывалась в минуту.
+  // Белый на малой яркости оставляем как признак «идёт обновление».
+  s_link.onOtaBegin([]() { animationsHoldStatic(CRGB(16, 16, 16)); });
+  // Загрузка сорвалась — возвращаемся к настройкам пользователя. При успехе
+  // колбэка не будет: устройство перезагрузится в новую прошивку.
+  s_link.onOtaAbort([]() { animationsResume(); });
 
   // 5. SHT31: опциональный — устройство работает и без него.
   //    begin() теперь lazy (probe в первый tick) — setup остаётся быстрым.

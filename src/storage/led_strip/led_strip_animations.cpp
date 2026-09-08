@@ -189,7 +189,27 @@ bool animationsIsOverrideActive() {
     return g_overrideActive && g_overrideEnabled;
 }
 
+// Лента заморожена (идёт обновление прошивки): кадры не считаем, show() не
+// зовём. Снимается только animationsResume().
+static bool g_frozen = false;
+
+void animationsHoldStatic(const CRGB& color) {
+    g_frozen = true;
+    if (!g_exec) return;
+    CRGB*    leds = g_exec->leds();
+    uint16_t n    = g_exec->ledsCount();
+    if (!leds || n == 0) return;
+    fill_solid(leds, n, color);
+    FastLED.show();   // единственный вызов за всё время обновления
+}
+
+void animationsResume() {
+    g_frozen = false;
+    animationsApply();
+}
+
 void animationsLoop(uint32_t nowMs) {
+    if (g_frozen) return;
     if (!g_exec) return;
 
     // Дросселируем кадры до ~30 fps.
