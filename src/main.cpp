@@ -206,6 +206,9 @@ extern "C" void led_pulse(void) {
 
 // ── Полный config из меню → MQTT + Local WS ──────────────────────────
 // Один вызов — два транспорта (s_link.devicePublisher() — dual-publish helper).
+// Запрошен полный конфиг: публикуем из loop(), а не из колбэка приёма.
+static volatile bool s_menuPublishPending = false;
+
 static void publishFullMenu() {
   static char buf[MENU_FULL_JSON_BUF_SIZE];
   size_t len = menu_buildFullJson(buf, sizeof(buf));
@@ -219,7 +222,10 @@ static void publishFullMenu() {
 // Продуктовые команды портала/Local-WS (get_config/set/invoke). Встроенные
 // (ping и др.) — в либе.
 static void registerCommands() {
-  s_link.onCommand("get_config", [](JsonObjectConst) { publishFullMenu(); });
+  // Не публикуем прямо здесь: колбэк вызывается из разбора входящего
+  // MQTT-сообщения, то есть глубоко в стеке. Генерация меню сверху переполняет
+  // стек loopTask — так падал iHeater. Ставим флаг, публикуем из loop().
+  s_link.onCommand("get_config", [](JsonObjectConst) { s_menuPublishPending = true; });
   // binding-v3: портал отвязал устройство (retained REVOKE) → стереть секрет,
   // вернуться к ожиданию токена привязки (SETUP).
   s_link.onCommand("revoke", [](JsonObjectConst) { s_link.handleRevoke(); });
@@ -448,6 +454,13 @@ void setup() {
 
 void loop() {
   s_link.loop();     // фасад: WiFi/MQTT/LocalAccess + auto-telemetry
+
+  // Ответ на get_config: из цикла, а не из колбэка приёма — см. onCommand.
+  if (s_menuPublishPending) {
+    s_menuPublishPending = false;
+    publishFullMenu();
+  }
+
   s_executor.loop(); // off-by-timer для led.pulse
 
   animationsLoop(
