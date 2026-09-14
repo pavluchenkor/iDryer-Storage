@@ -65,9 +65,11 @@ static const iDryer::Config CFG = {
     .allowBambu = false,
     .allowMoonraker = false,
 
-    .telemetryPeriodMs = 30000,
-    .telemetryPeriodIdleMs = 60000,
-    .statusPeriodMs = 0, // Storage не публикует status
+    // Периоды публикации не задаём — ядро берёт их из контракта
+    // (publish_defaults в mqtt_contract.yaml).
+    // Статуса у Storage нет вовсе: ни режимов, ни уставок. Это флаг, а не
+    // нулевой период — ноль теперь означает «взять из контракта».
+    .statusDisabled = true,
 
     // Подсветка — работа декоративная и сама никогда не закончится, поэтому
     // ради обновления её можно прервать. Значение из контракта
