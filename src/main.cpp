@@ -13,7 +13,9 @@
 
 // Меню v3: сгенерированные артефакты из lib/idryer-menu (yaml → C++).
 #include <menu_bindings.h> // menu_sync_state_to_cache
+#include <menu_cache.h>    // g_menu_cache — значения для config/delta
 #include <menu_commands.h> // menu_buildFullJson, MENU_FULL_JSON_BUF_SIZE
+#include <menu_meta.h>     // g_menu_meta — тип/scope пункта для config/delta
 #include <menu_ids.h>
 #include <menu_nvs_io.h> // menu_nvs_begin, NVS_KEY_*
 #include <menu_state.h>
@@ -219,6 +221,67 @@ static void publishFullMenu() {
   s_link.devicePublisher()->publishConfigRaw(buf, len);
 }
 
+// ── Дельта изменённых пунктов → MQTT config/delta ─────────────────────
+// Штатный путь после commands/set: портал держит меню актуальным по config
+// (снимок на подключении) + config/delta (изменения). Полное меню отсюда не
+// шлём — его сборка стоит килобайтов стека, а колбэк команды и так вызван
+// глубоко в стеке loopTask.
+static uint16_t s_deltaRev = 0;
+
+static void publishMenuDelta(const uint16_t *ids, uint8_t count) {
+  if (!ids || count == 0)
+    return;
+
+  StaticJsonDocument<256> doc;
+  doc["rev"] = ++s_deltaRev;
+  JsonObject d = doc.createNestedObject("d");
+
+  uint8_t units = g_menu_cache.getUnitsCount();
+  if (units == 0)
+    units = 1;
+
+  char key[8];
+  for (uint8_t i = 0; i < count; i++) {
+    const uint16_t id = ids[i];
+    if (id >= MENU_META_COUNT)
+      continue;
+    const MenuMeta *meta = &g_menu_meta[id];
+    snprintf(key, sizeof(key), "%u", (unsigned)id);
+
+    // Форма значения — как в полном меню: global скаляром, per-unit массивом.
+    if (meta->scope == META_SCOPE_GLOBAL) {
+      if (meta->type == META_TOGGLE)
+        d[key] = g_menu_cache.getBool(id, 0);
+      else
+        d[key] = g_menu_cache.getFloat(id, 0);
+    } else {
+      JsonArray vals = d.createNestedArray(key);
+      for (uint8_t u = 0; u < units; u++) {
+        if (meta->type == META_TOGGLE)
+          vals.add(g_menu_cache.getBool(id, u));
+        else
+          vals.add(g_menu_cache.getFloat(id, u));
+      }
+    }
+  }
+
+  if (doc.overflowed()) {
+    HAL_LOG_ERROR("MENU", "delta does not fit 256 bytes (%u items)",
+                  (unsigned)count);
+    return;
+  }
+
+  char buf[192];
+  const size_t len = serializeJson(doc, buf, sizeof(buf));
+  if (len == 0) {
+    HAL_LOG_ERROR("MENU", "delta serialize failed");
+    return;
+  }
+  s_link.devicePublisher()->publishConfigDelta(buf, len);
+  HAL_LOG_INFO("MENU", "delta published: %u bytes, rev %u", (unsigned)len,
+               (unsigned)s_deltaRev);
+}
+
 // Продуктовые команды портала/Local-WS (get_config/set/invoke). Встроенные
 // (ping и др.) — в либе.
 static void registerCommands() {
@@ -260,14 +323,20 @@ static void registerCommands() {
       bool flag = (val != 0);
       menu_apply_by_bind("ign_ext_cmd", flag ? 1.0f : 0.0f);
       s_link.setIgnoreExternalCmd(flag);
-      publishFullMenu();
+      const MenuBinding *mb = menu_find_bind("ign_ext_cmd");
+      if (mb) {
+        const uint16_t changed[1] = {mb->id};
+        publishMenuDelta(changed, 1);
+      }
       return;
     }
 
     if (id >= 0 && val >= 0 &&
         applyConfigChange(id, val, s_executor, onMenuChanged)) {
-      // Повторно публикуем full config — UI видит изменения без запроса.
-      publishFullMenu();
+      // Подтверждение правки — дельтой: UI видит изменение без запроса, а
+      // полное меню не собирается в стеке колбэка.
+      const uint16_t changed[1] = {(uint16_t)id};
+      publishMenuDelta(changed, 1);
     } else {
       HAL_LOG_WARN("MAIN", "set ignored: id=%d val=%d (bad/unsupported)", id,
                    val);
@@ -279,7 +348,8 @@ static void registerCommands() {
     // сушилки.
     const char *action = data["action"] | "";
     if (strcmp(action, "device.getConfig") == 0) {
-      publishFullMenu();
+      // Как и get_config: публикуем из loop(), не из стека колбэка.
+      s_menuPublishPending = true;
       return;
     }
     // led.pulse, led.animation — LED-лента знает свой набор action'ов.
