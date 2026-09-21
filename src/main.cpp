@@ -69,9 +69,8 @@ static const iDryer::Config CFG = {
 
     // Периоды публикации не задаём — ядро берёт их из контракта
     // (publish_defaults в mqtt_contract.yaml).
-    // Статуса у Storage нет вовсе: ни режимов, ни уставок. Это флаг, а не
-    // нулевой период — ноль теперь означает «взять из контракта».
-    .statusDisabled = true,
+    // Статус публикуется: режим ленты (IDLE / LIGHT_ANIMATION) нужен карточке,
+    // чтобы показать, горит подсветка или нет. Уставок у Storage нет.
 
     // Подсветка — работа декоративная и сама никогда не закончится, поэтому
     // ради обновления её можно прервать. Значение из контракта
@@ -284,28 +283,25 @@ static void publishMenuDelta(const uint16_t *ids, uint8_t count) {
 
 // Продуктовые команды портала/Local-WS (get_config/set/invoke). Встроенные
 // (ping и др.) — в либе.
-// Действие ленты + синхронизация status.mode с override анимаций. Общий путь
-// для invoke из портала и для действий карточки.
+// Действие ленты. Общий путь для invoke из портала и для действий карточки.
 static void executeLed(const char *action, JsonObjectConst args) {
   s_executor.execute(action, args);
+}
 
-  // Sync status.mode с override-состоянием анимаций: long-running override
-  // (солид/breathe/wave/rainbow на всю ленту) — это LightAnimation,
-  // отсутствие override (или ZONE pulse) — IDLE. Publish триггерится
-  // только при смене mode чтобы не шуметь.
-  const auto newMode = animationsIsOverrideActive()
-                           ? iDryer::UnitMode::LightAnimation
-                           : iDryer::UnitMode::Idle;
-  if (s_link.status.mode[0] != newMode) {
-    s_link.status.mode[0] = newMode;
-    s_link.publishStatusNow();
-  }
+// status.mode = состояние override анимаций: long-running override
+// (solid/breathe/wave/rainbow/twinkle на всю ленту) — LightAnimation,
+// нет override (или ZONE pulse) — Idle. Сверяется в loop(): override снимает
+// не только invoke, но и любая правка меню. Смену режима ядро публикует само.
+static void syncLedMode() {
+  s_link.status.mode[0] = animationsIsOverrideActive()
+                              ? iDryer::UnitMode::LightAnimation
+                              : iDryer::UnitMode::Idle;
 }
 
 // ── Действия карточки ────────────────────────────────────────────────────────
-// Статуса у Storage нет (statusDisabled): режим ленты карточка не узнает,
-// поэтому включение и выключение — действия без режима, обе кнопки видны
-// всегда. Анимации — те, что знает animationsParse().
+// Включение переводит юнит в LIGHT_ANIMATION, выключение — в IDLE: карточка
+// по status.mode показывает либо форму включения, либо горящую подсветку и
+// выключение. Анимации — те, что знает animationsParse().
 static const char *const kLedAnimations[] = {"solid", "breathe", "wave",
                                              "rainbow", "twinkle"};
 
@@ -321,15 +317,13 @@ static void cardLightOff(uint8_t, JsonObjectConst) {
 
 static void declareCardActions() {
   auto &card = s_link.card();
-  card.action("light_on", nullptr, cardLightOn)
+  card.action("light_on", "LIGHT_ANIMATION", cardLightOn)
       .name("ru", "Включить").name("en", "Turn on")
       .select("animation", "effect", kLedAnimations,
               sizeof(kLedAnimations) / sizeof(kLedAnimations[0]))
       .color("color", "rgb_color", "#FFFFFF");
-  card.action("light_off", nullptr, cardLightOff)
+  card.action("light_off", "IDLE", cardLightOff)
       .name("ru", "Выключить").name("en", "Turn off");
-  // Включить и выключить — одним рядом; поля анимации и цвета над ним.
-  card.layoutRow("light_on", "light_off");
 }
 
 static void registerCommands() {
@@ -412,6 +406,9 @@ static void registerCommands() {
     const bool online = s_link.isOnline();
     if (online && !s_wasOnline) {
       publishFullMenu();
+      // Статус в простое ядро шлёт раз в несколько минут — без этого после
+      // перезагрузки карточка видела бы retained-режим от прошлого запуска.
+      s_link.publishStatusNow();
     }
     s_wasOnline = online;
   });
@@ -572,6 +569,7 @@ void loop() {
 
   animationsLoop(
       millis()); // не запускается пока активен pulse (проверяет внутри)
+  syncLedMode();
 
   if (s_sensorOk) {
     s_sensor.tick(millis());
