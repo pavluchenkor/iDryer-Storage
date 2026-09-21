@@ -328,6 +328,8 @@ static void declareCardActions() {
       .color("color", "rgb_color", "#FFFFFF");
   card.action("light_off", nullptr, cardLightOff)
       .name("ru", "Выключить").name("en", "Turn off");
+  // Включить и выключить — одним рядом; поля анимации и цвета над ним.
+  card.layoutRow("light_on", "light_off");
 }
 
 static void registerCommands() {
