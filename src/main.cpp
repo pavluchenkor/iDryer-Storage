@@ -284,6 +284,52 @@ static void publishMenuDelta(const uint16_t *ids, uint8_t count) {
 
 // Продуктовые команды портала/Local-WS (get_config/set/invoke). Встроенные
 // (ping и др.) — в либе.
+// Действие ленты + синхронизация status.mode с override анимаций. Общий путь
+// для invoke из портала и для действий карточки.
+static void executeLed(const char *action, JsonObjectConst args) {
+  s_executor.execute(action, args);
+
+  // Sync status.mode с override-состоянием анимаций: long-running override
+  // (солид/breathe/wave/rainbow на всю ленту) — это LightAnimation,
+  // отсутствие override (или ZONE pulse) — IDLE. Publish триггерится
+  // только при смене mode чтобы не шуметь.
+  const auto newMode = animationsIsOverrideActive()
+                           ? iDryer::UnitMode::LightAnimation
+                           : iDryer::UnitMode::Idle;
+  if (s_link.status.mode[0] != newMode) {
+    s_link.status.mode[0] = newMode;
+    s_link.publishStatusNow();
+  }
+}
+
+// ── Действия карточки ────────────────────────────────────────────────────────
+// Статуса у Storage нет (statusDisabled): режим ленты карточка не узнает,
+// поэтому включение и выключение — действия без режима, обе кнопки видны
+// всегда. Анимации — те, что знает animationsParse().
+static const char *const kLedAnimations[] = {"solid", "breathe", "wave",
+                                             "rainbow", "twinkle"};
+
+static void cardLightOn(uint8_t, JsonObjectConst args) {
+  executeLed("led.pulse", args);
+}
+
+static void cardLightOff(uint8_t, JsonObjectConst) {
+  StaticJsonDocument<48> off;
+  off["animation"] = "off";
+  executeLed("led.pulse", off.as<JsonObjectConst>());
+}
+
+static void declareCardActions() {
+  auto &card = s_link.card();
+  card.action("light_on", nullptr, cardLightOn)
+      .name("ru", "Включить").name("en", "Turn on")
+      .select("animation", "effect", kLedAnimations,
+              sizeof(kLedAnimations) / sizeof(kLedAnimations[0]))
+      .color("color", "rgb_color", "#FFFFFF");
+  card.action("light_off", nullptr, cardLightOff)
+      .name("ru", "Выключить").name("en", "Turn off");
+}
+
 static void registerCommands() {
   // Не публикуем прямо здесь: колбэк вызывается из разбора входящего
   // MQTT-сообщения, то есть глубоко в стеке. Генерация меню сверху переполняет
@@ -353,19 +399,7 @@ static void registerCommands() {
       return;
     }
     // led.pulse, led.animation — LED-лента знает свой набор action'ов.
-    s_executor.execute(action, data["args"]);
-
-    // Sync status.mode с override-состоянием анимаций: long-running override
-    // (солид/breathe/wave/rainbow на всю ленту) — это LightAnimation,
-    // отсутствие override (или ZONE pulse) — IDLE. Publish триггерится
-    // только при смене mode чтобы не шуметь.
-    const auto newMode = animationsIsOverrideActive()
-                             ? iDryer::UnitMode::LightAnimation
-                             : iDryer::UnitMode::Idle;
-    if (s_link.status.mode[0] != newMode) {
-      s_link.status.mode[0] = newMode;
-      s_link.publishStatusNow();
-    }
+    executeLed(action, data["args"]);
   });
 
   // Авто-публикация меню при первом выходе в онлайн.
@@ -516,6 +550,7 @@ void setup() {
   }
 
   registerCommands();
+  declareCardActions();
 
 #ifdef IDRYER_DEV_REPL
   Serial.println(F("\n[boot] iDryer dev REPL ready — type 'help'"));
