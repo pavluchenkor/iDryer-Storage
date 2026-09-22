@@ -15,7 +15,9 @@ class LedStripExecutor;
 //
 // Chipset:     0=WS2812B 1=WS2811 2=WS2813 3=WS2815 4=SK6812
 // Color order: 0=RGB     1=RBG    2=GRB    3=GBR    4=BRG    5=BGR
-// Animation:   0=Solid   1=Breathe 2=Wave  3=Rainbow
+// Animation:   0=Solid   1=Breathe 2=Wave  3=Rainbow 4=Twinkle 5=Cycle
+//              6=Aurora  7=Candle  8=Ocean 9=Lava    10=Forest
+//              11=Swell  12=Ripple 13=Spotlight      14=Duo
 
 uint8_t selectedChipset();
 uint8_t selectedColorOrder();
@@ -38,7 +40,7 @@ uint16_t pulseDefaultDurationSec();
 // ── Bootstrap ───────────────────────────────────────────────────────
 
 // Починка эксклюзивных toggle-групп после menu.loadFromNVS():
-//   chipset (5), color_order (6), animation (4), idle_color (8), pulse_color (8).
+//   chipset (5), color_order (6), animation (15), idle_color (8), pulse_color (8).
 void normalizeMenuGroups();
 
 // Применить led_count, psu_ma и brightness к executor + FastLED globals.

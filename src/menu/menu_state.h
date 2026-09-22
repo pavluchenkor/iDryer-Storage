@@ -30,6 +30,16 @@ public:
   bool anim_wave = true;
   bool anim_rainbow = false;
   bool anim_twinkle = false;
+  bool anim_cycle = false;
+  bool anim_aurora = false;
+  bool anim_candle = false;
+  bool anim_ocean = false;
+  bool anim_lava = false;
+  bool anim_forest = false;
+  bool anim_swell = false;
+  bool anim_ripple = false;
+  bool anim_spotlight = false;
+  bool anim_duo = false;
   bool idle_red = false;
   bool idle_orange = false;
   bool idle_yellow = false;

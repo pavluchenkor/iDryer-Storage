@@ -28,6 +28,8 @@ constexpr size_t kOrderCount = sizeof(kOrderBinds) / sizeof(kOrderBinds[0]);
 
 constexpr const char* kAnimBinds[] = {
     "anim_solid", "anim_breathe", "anim_wave", "anim_rainbow", "anim_twinkle",
+    "anim_cycle", "anim_aurora", "anim_candle", "anim_ocean", "anim_lava", "anim_forest",
+    "anim_swell", "anim_ripple", "anim_spotlight", "anim_duo",
 };
 constexpr size_t kAnimCount = sizeof(kAnimBinds) / sizeof(kAnimBinds[0]);
 
@@ -98,7 +100,10 @@ bool tryHandleGroupActivation(int id, int val) {
     // Группа order
     static const int orderIds[]      = {MENU_ORDER_RGB, MENU_ORDER_RBG, MENU_ORDER_GRB, MENU_ORDER_GBR, MENU_ORDER_BRG, MENU_ORDER_BGR};
     // Группа anim
-    static const int animIds[]       = {MENU_ANIM_SOLID, MENU_ANIM_BREATHE, MENU_ANIM_WAVE, MENU_ANIM_RAINBOW, MENU_ANIM_TWINKLE};
+    static const int animIds[]       = {MENU_ANIM_SOLID, MENU_ANIM_BREATHE, MENU_ANIM_WAVE, MENU_ANIM_RAINBOW, MENU_ANIM_TWINKLE,
+                                         MENU_ANIM_CYCLE, MENU_ANIM_AURORA, MENU_ANIM_CANDLE, MENU_ANIM_OCEAN,
+                                         MENU_ANIM_LAVA, MENU_ANIM_FOREST, MENU_ANIM_SWELL, MENU_ANIM_RIPPLE,
+                                         MENU_ANIM_SPOTLIGHT, MENU_ANIM_DUO};
     // Группа idle color
     static const int idleColorIds[]  = {MENU_IDLE_RED, MENU_IDLE_ORANGE, MENU_IDLE_YELLOW, MENU_IDLE_GREEN,
                                          MENU_IDLE_CYAN, MENU_IDLE_BLUE, MENU_IDLE_MAGENTA, MENU_IDLE_WHITE};

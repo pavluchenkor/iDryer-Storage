@@ -289,7 +289,7 @@ static void executeLed(const char *action, JsonObjectConst args) {
 }
 
 // status.mode = состояние override анимаций: long-running override
-// (solid/breathe/wave/rainbow/twinkle на всю ленту) — LightAnimation,
+// (любая анимация из kLedAnimations на всю ленту) — LightAnimation,
 // нет override (или ZONE pulse) — Idle. Сверяется в loop(): override снимает
 // не только invoke, но и любая правка меню. Смену режима ядро публикует само.
 static void syncLedMode() {
@@ -302,8 +302,10 @@ static void syncLedMode() {
 // Включение переводит юнит в LIGHT_ANIMATION, выключение — в IDLE: карточка
 // по status.mode показывает либо форму включения, либо горящую подсветку и
 // выключение. Анимации — те, что знает animationsParse().
-static const char *const kLedAnimations[] = {"solid", "breathe", "wave",
-                                             "rainbow", "twinkle"};
+static const char *const kLedAnimations[] = {
+    "solid", "breathe", "wave",  "rainbow", "twinkle", "cycle",
+    "aurora", "candle", "ocean", "lava",    "forest",  "swell",
+    "ripple", "spotlight", "duo"};
 
 static void cardLightOn(uint8_t, JsonObjectConst args) {
   executeLed("led.pulse", args);

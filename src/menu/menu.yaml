@@ -222,8 +222,88 @@
               persist: true
               scope: global
               default: false
+            - id: anim_cycle
+              type: toggle
+              title: { ru: "Переливы", en: "Color cycle" }
+              vtype: bool
+              bind: anim_cycle
+              persist: true
+              scope: global
+              default: false
+            - id: anim_aurora
+              type: toggle
+              title: { ru: "Сияние", en: "Aurora" }
+              vtype: bool
+              bind: anim_aurora
+              persist: true
+              scope: global
+              default: false
+            - id: anim_candle
+              type: toggle
+              title: { ru: "Свеча", en: "Candle" }
+              vtype: bool
+              bind: anim_candle
+              persist: true
+              scope: global
+              default: false
+            - id: anim_ocean
+              type: toggle
+              title: { ru: "Океан", en: "Ocean" }
+              vtype: bool
+              bind: anim_ocean
+              persist: true
+              scope: global
+              default: false
+            - id: anim_lava
+              type: toggle
+              title: { ru: "Лава", en: "Lava" }
+              vtype: bool
+              bind: anim_lava
+              persist: true
+              scope: global
+              default: false
+            - id: anim_forest
+              type: toggle
+              title: { ru: "Лес", en: "Forest" }
+              vtype: bool
+              bind: anim_forest
+              persist: true
+              scope: global
+              default: false
+            - id: anim_swell
+              type: toggle
+              title: { ru: "Прилив", en: "Swell" }
+              vtype: bool
+              bind: anim_swell
+              persist: true
+              scope: global
+              default: false
+            - id: anim_ripple
+              type: toggle
+              title: { ru: "Рябь", en: "Ripple" }
+              vtype: bool
+              bind: anim_ripple
+              persist: true
+              scope: global
+              default: false
+            - id: anim_spotlight
+              type: toggle
+              title: { ru: "Прожектор", en: "Spotlight" }
+              vtype: bool
+              bind: anim_spotlight
+              persist: true
+              scope: global
+              default: false
+            - id: anim_duo
+              type: toggle
+              title: { ru: "Два цвета", en: "Two tones" }
+              vtype: bool
+              bind: anim_duo
+              persist: true
+              scope: global
+              default: false
 
-        # Цвет фоновой анимации. Игнорируется для Rainbow.
+        # Цвет фоновой анимации. Игнорируется для Rainbow, Cycle, Candle, Ocean, Lava, Forest.
         - id: idle_color_group
           type: submenu
           title: { ru: "ЦВЕТ", en: "COLOR" }

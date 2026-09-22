@@ -137,7 +137,7 @@ const MenuItem g_menu[MENU__COUNT] = {
   },
   [20] = {
     MENU_ANIM_GROUP, { "АНИМАЦИЯ", "ANIMATION" }, { nullptr, nullptr },
-    MN_SUBMENU, 18, 21, 5,
+    MN_SUBMENU, 18, 21, 15,
     { { NULL }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
     -1, 0
   },
@@ -172,144 +172,204 @@ const MenuItem g_menu[MENU__COUNT] = {
     -1, 0
   },
   [26] = {
-    MENU_IDLE_COLOR_GROUP, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
-    MN_SUBMENU, 18, 27, 8,
-    { { NULL }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
+    MENU_ANIM_CYCLE, { "Переливы", "Color cycle" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_cycle, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [27] = {
-    MENU_IDLE_RED, { "Красный", "Red" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_red, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_AURORA, { "Сияние", "Aurora" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_aurora, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [28] = {
-    MENU_IDLE_ORANGE, { "Оранжевый", "Orange" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_orange, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_CANDLE, { "Свеча", "Candle" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_candle, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [29] = {
-    MENU_IDLE_YELLOW, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_yellow, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_OCEAN, { "Океан", "Ocean" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_ocean, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [30] = {
-    MENU_IDLE_GREEN, { "Зелёный", "Green" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_green, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_LAVA, { "Лава", "Lava" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_lava, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [31] = {
-    MENU_IDLE_CYAN, { "Голубой", "Cyan" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_cyan, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_FOREST, { "Лес", "Forest" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_forest, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [32] = {
-    MENU_IDLE_BLUE, { "Синий", "Blue" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_blue, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_SWELL, { "Прилив", "Swell" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_swell, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [33] = {
-    MENU_IDLE_MAGENTA, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_magenta, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_RIPPLE, { "Рябь", "Ripple" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_ripple, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [34] = {
-    MENU_IDLE_WHITE, { "Белый", "White" }, { nullptr, nullptr },
-    MN_TOGGLE, 26, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.idle_white, 0, 0, 1, nullptr, false } },
+    MENU_ANIM_SPOTLIGHT, { "Прожектор", "Spotlight" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_spotlight, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [35] = {
-    MENU_PULSE_DEFAULTS, { "ИМПУЛЬС", "PULSE DEFAULTS" }, { nullptr, nullptr },
-    MN_SUBMENU, 0, 36, 2,
-    { { NULL }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
+    MENU_ANIM_DUO, { "Два цвета", "Two tones" }, { nullptr, nullptr },
+    MN_TOGGLE, 20, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.anim_duo, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [36] = {
-    MENU_PULSE_COLOR_GROUP, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
-    MN_SUBMENU, 35, 37, 8,
+    MENU_IDLE_COLOR_GROUP, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
+    MN_SUBMENU, 18, 37, 8,
     { { NULL }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
     -1, 0
   },
   [37] = {
-    MENU_PULSE_RED, { "Красный", "Red" }, { nullptr, nullptr },
+    MENU_IDLE_RED, { "Красный", "Red" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_red, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_red, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [38] = {
-    MENU_PULSE_ORANGE, { "Оранжевый", "Orange" }, { nullptr, nullptr },
+    MENU_IDLE_ORANGE, { "Оранжевый", "Orange" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_orange, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_orange, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [39] = {
-    MENU_PULSE_YELLOW, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
+    MENU_IDLE_YELLOW, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_yellow, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_yellow, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [40] = {
-    MENU_PULSE_GREEN, { "Зелёный", "Green" }, { nullptr, nullptr },
+    MENU_IDLE_GREEN, { "Зелёный", "Green" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_green, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_green, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [41] = {
-    MENU_PULSE_CYAN, { "Голубой", "Cyan" }, { nullptr, nullptr },
+    MENU_IDLE_CYAN, { "Голубой", "Cyan" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_cyan, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_cyan, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [42] = {
-    MENU_PULSE_BLUE, { "Синий", "Blue" }, { nullptr, nullptr },
+    MENU_IDLE_BLUE, { "Синий", "Blue" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_blue, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_blue, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [43] = {
-    MENU_PULSE_MAGENTA, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
+    MENU_IDLE_MAGENTA, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_magenta, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_magenta, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [44] = {
-    MENU_PULSE_WHITE, { "Белый", "White" }, { nullptr, nullptr },
+    MENU_IDLE_WHITE, { "Белый", "White" }, { nullptr, nullptr },
     MN_TOGGLE, 36, -1, 0,
-    { { NULL }, { VT_BOOL, (void*)&menu.pulse_white, 0, 0, 1, nullptr, false } },
+    { { NULL }, { VT_BOOL, (void*)&menu.idle_white, 0, 0, 1, nullptr, false } },
     -1, 0
   },
   [45] = {
-    MENU_PULSE_DURATION, { "ДЛИТЕЛЬНОСТЬ", "DURATION" }, { "сек", "sec" },
-    MN_VALUE, 35, -1, 0,
-    { { NULL }, { VT_U16, (void*)&menu.pulse_dur_sec, 1, 600, 1, nullptr, false } },
+    MENU_PULSE_DEFAULTS, { "ИМПУЛЬС", "PULSE DEFAULTS" }, { nullptr, nullptr },
+    MN_SUBMENU, 0, 46, 2,
+    { { NULL }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
     -1, 0
   },
   [46] = {
+    MENU_PULSE_COLOR_GROUP, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
+    MN_SUBMENU, 45, 47, 8,
+    { { NULL }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
+    -1, 0
+  },
+  [47] = {
+    MENU_PULSE_RED, { "Красный", "Red" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_red, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [48] = {
+    MENU_PULSE_ORANGE, { "Оранжевый", "Orange" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_orange, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [49] = {
+    MENU_PULSE_YELLOW, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_yellow, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [50] = {
+    MENU_PULSE_GREEN, { "Зелёный", "Green" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_green, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [51] = {
+    MENU_PULSE_CYAN, { "Голубой", "Cyan" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_cyan, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [52] = {
+    MENU_PULSE_BLUE, { "Синий", "Blue" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_blue, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [53] = {
+    MENU_PULSE_MAGENTA, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_magenta, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [54] = {
+    MENU_PULSE_WHITE, { "Белый", "White" }, { nullptr, nullptr },
+    MN_TOGGLE, 46, -1, 0,
+    { { NULL }, { VT_BOOL, (void*)&menu.pulse_white, 0, 0, 1, nullptr, false } },
+    -1, 0
+  },
+  [55] = {
+    MENU_PULSE_DURATION, { "ДЛИТЕЛЬНОСТЬ", "DURATION" }, { "сек", "sec" },
+    MN_VALUE, 45, -1, 0,
+    { { NULL }, { VT_U16, (void*)&menu.pulse_dur_sec, 1, 600, 1, nullptr, false } },
+    -1, 0
+  },
+  [56] = {
     MENU_LED_PULSE, { "ИМПУЛЬС", "LED PULSE" }, { nullptr, nullptr },
     MN_ACTION, 0, -1, 0,
     { { led_pulse }, { VT_F32, NULL, 0, 0, 0, NULL, false } },
     -1, 0
   },
-  [47] = {
+  [57] = {
     MENU_IGNORE_EXTERNAL_CMD, { "ИГНОР. ВНЕШ. КОМАНД", "IGNOR EXT CMD" }, { nullptr, nullptr },
     MN_TOGGLE, 0, -1, 0,
     { { NULL }, { VT_BOOL, (void*)&menu.ign_ext_cmd, 0, 0, 1, nullptr, false } },
     -1, 0
   },
-  [48] = {
+  [58] = {
     MENU_UNITS_COUNT, { "КОЛ-ВО ЮНИТОВ", "UNITS" }, { nullptr, nullptr },
     MN_VALUE, 0, -1, 0,
     { { NULL }, { VT_U8, (void*)&menu.units_count, 1, 1, 1, nullptr, false } },
     -1, 0
   },
-  [49] = {
+  [59] = {
     MENU_LANGUAGE, { "ЯЗЫК", "LANGUAGE" }, { nullptr, nullptr },
     MN_VALUE, 0, -1, 0,
     { { NULL }, { VT_U8, (void*)&menu.language, 0, 1, 1, nullptr, false } },
