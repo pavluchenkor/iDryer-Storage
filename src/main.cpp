@@ -6,6 +6,7 @@
 #include <FastLED.h>
 #include <Wire.h>
 #include <iDryer.h>
+#include <idryer_integrations.h>
 #include <local_access/device_publisher.h>
 #include <ota_receiver.h>
 #include <runtime/idryer_runtime.h>
@@ -552,6 +553,9 @@ void setup() {
 
   registerCommands();
   declareCardActions();
+
+  // Из интеграций у Storage только HA: без выбора активной менеджер её не запускает.
+  s_link.integrationsManager()->setActive(idryer::cloud::ActiveIntegration::Ha);
 
 #ifdef IDRYER_DEV_REPL
   Serial.println(F("\n[boot] iDryer dev REPL ready — type 'help'"));
