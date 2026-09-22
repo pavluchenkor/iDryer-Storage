@@ -63,7 +63,7 @@ static const iDryer::Config CFG = {
     .hasAirHumidity = true,
     .hasHeaterTemp = false,
 
-    .allowHa = false,
+    .allowHa = true,
     .allowBambu = false,
     .allowMoonraker = false,
 
