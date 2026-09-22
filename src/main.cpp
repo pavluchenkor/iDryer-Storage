@@ -64,10 +64,6 @@ static const iDryer::Config CFG = {
     .hasAirHumidity = true,
     .hasHeaterTemp = false,
 
-    .allowHa = true,
-    .allowBambu = false,
-    .allowMoonraker = false,
-
     // Периоды публикации не задаём — ядро берёт их из контракта
     // (publish_defaults в mqtt_contract.yaml).
     // Статус публикуется: режим ленты (IDLE / LIGHT_ANIMATION) нужен карточке,
