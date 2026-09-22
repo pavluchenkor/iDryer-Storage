@@ -16,8 +16,8 @@ class LedStripExecutor;
 // Chipset:     0=WS2812B 1=WS2811 2=WS2813 3=WS2815 4=SK6812
 // Color order: 0=RGB     1=RBG    2=GRB    3=GBR    4=BRG    5=BGR
 // Animation:   0=Solid   1=Breathe 2=Wave  3=Rainbow 4=Twinkle 5=Cycle
-//              6=Aurora  7=Candle  8=Ocean 9=Lava    10=Forest
-//              11=Swell  12=Ripple 13=Spotlight      14=Duo
+//              6=Swell   7=Ripple  8=Spotlight       9=Duo
+//              (aurora, candle, ocean, lava, forest отключены)
 
 uint8_t selectedChipset();
 uint8_t selectedColorOrder();

@@ -304,8 +304,8 @@ static void syncLedMode() {
 // выключение. Анимации — те, что знает animationsParse().
 static const char *const kLedAnimations[] = {
     "solid", "breathe", "wave",  "rainbow", "twinkle", "cycle",
-    "aurora", "candle", "ocean", "lava",    "forest",  "swell",
-    "ripple", "spotlight", "duo"};
+    // "aurora", "candle", "ocean", "lava",    "forest",
+    "swell", "ripple", "spotlight", "duo"};
 
 static void cardLightOn(uint8_t, JsonObjectConst args) {
   executeLed("led.pulse", args);

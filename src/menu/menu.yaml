@@ -230,46 +230,47 @@
               persist: true
               scope: global
               default: false
-            - id: anim_aurora
-              type: toggle
-              title: { ru: "Сияние", en: "Aurora" }
-              vtype: bool
-              bind: anim_aurora
-              persist: true
-              scope: global
-              default: false
-            - id: anim_candle
-              type: toggle
-              title: { ru: "Свеча", en: "Candle" }
-              vtype: bool
-              bind: anim_candle
-              persist: true
-              scope: global
-              default: false
-            - id: anim_ocean
-              type: toggle
-              title: { ru: "Океан", en: "Ocean" }
-              vtype: bool
-              bind: anim_ocean
-              persist: true
-              scope: global
-              default: false
-            - id: anim_lava
-              type: toggle
-              title: { ru: "Лава", en: "Lava" }
-              vtype: bool
-              bind: anim_lava
-              persist: true
-              scope: global
-              default: false
-            - id: anim_forest
-              type: toggle
-              title: { ru: "Лес", en: "Forest" }
-              vtype: bool
-              bind: anim_forest
-              persist: true
-              scope: global
-              default: false
+            # Отключено (место на флеше): aurora, candle, ocean, lava, forest.
+#           - id: anim_aurora
+#             type: toggle
+#             title: { ru: "Сияние", en: "Aurora" }
+#             vtype: bool
+#             bind: anim_aurora
+#             persist: true
+#             scope: global
+#             default: false
+#           - id: anim_candle
+#             type: toggle
+#             title: { ru: "Свеча", en: "Candle" }
+#             vtype: bool
+#             bind: anim_candle
+#             persist: true
+#             scope: global
+#             default: false
+#           - id: anim_ocean
+#             type: toggle
+#             title: { ru: "Океан", en: "Ocean" }
+#             vtype: bool
+#             bind: anim_ocean
+#             persist: true
+#             scope: global
+#             default: false
+#           - id: anim_lava
+#             type: toggle
+#             title: { ru: "Лава", en: "Lava" }
+#             vtype: bool
+#             bind: anim_lava
+#             persist: true
+#             scope: global
+#             default: false
+#           - id: anim_forest
+#             type: toggle
+#             title: { ru: "Лес", en: "Forest" }
+#             vtype: bool
+#             bind: anim_forest
+#             persist: true
+#             scope: global
+#             default: false
             - id: anim_swell
               type: toggle
               title: { ru: "Прилив", en: "Swell" }

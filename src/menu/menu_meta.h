@@ -5,9 +5,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MENU_META_COUNT 60
+#define MENU_META_COUNT 55
 #define MENU_LANG_COUNT 2
-#define MENU_SERIALIZED_MAX_SIZE 5626
+#define MENU_SERIALIZED_MAX_SIZE 5228
 
 typedef enum {
     META_SUBMENU = 0,
@@ -154,7 +154,7 @@ static const MenuMeta g_menu_meta[MENU_META_COUNT] = {
       nullptr, nullptr },
     // [20] anim_group
     { 20, { "АНИМАЦИЯ", "ANIMATION" }, { nullptr, nullptr },
-      META_SUBMENU, 18, 21, 15,
+      META_SUBMENU, 18, 21, 10,
       META_VT_F32, 0.0f, 0.0f, 0.0f, META_SCOPE_PER_UNIT,
       nullptr, nullptr },
     // [21] anim_solid
@@ -187,168 +187,143 @@ static const MenuMeta g_menu_meta[MENU_META_COUNT] = {
       META_TOGGLE, 20, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [27] anim_aurora
-    { 27, { "Сияние", "Aurora" }, { nullptr, nullptr },
+    // [27] anim_swell
+    { 27, { "Прилив", "Swell" }, { nullptr, nullptr },
       META_TOGGLE, 20, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [28] anim_candle
-    { 28, { "Свеча", "Candle" }, { nullptr, nullptr },
+    // [28] anim_ripple
+    { 28, { "Рябь", "Ripple" }, { nullptr, nullptr },
       META_TOGGLE, 20, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [29] anim_ocean
-    { 29, { "Океан", "Ocean" }, { nullptr, nullptr },
+    // [29] anim_spotlight
+    { 29, { "Прожектор", "Spotlight" }, { nullptr, nullptr },
       META_TOGGLE, 20, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [30] anim_lava
-    { 30, { "Лава", "Lava" }, { nullptr, nullptr },
+    // [30] anim_duo
+    { 30, { "Два цвета", "Two tones" }, { nullptr, nullptr },
       META_TOGGLE, 20, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [31] anim_forest
-    { 31, { "Лес", "Forest" }, { nullptr, nullptr },
-      META_TOGGLE, 20, -1, 0,
-      META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
-      nullptr, nullptr },
-    // [32] anim_swell
-    { 32, { "Прилив", "Swell" }, { nullptr, nullptr },
-      META_TOGGLE, 20, -1, 0,
-      META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
-      nullptr, nullptr },
-    // [33] anim_ripple
-    { 33, { "Рябь", "Ripple" }, { nullptr, nullptr },
-      META_TOGGLE, 20, -1, 0,
-      META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
-      nullptr, nullptr },
-    // [34] anim_spotlight
-    { 34, { "Прожектор", "Spotlight" }, { nullptr, nullptr },
-      META_TOGGLE, 20, -1, 0,
-      META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
-      nullptr, nullptr },
-    // [35] anim_duo
-    { 35, { "Два цвета", "Two tones" }, { nullptr, nullptr },
-      META_TOGGLE, 20, -1, 0,
-      META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
-      nullptr, nullptr },
-    // [36] idle_color_group
-    { 36, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
-      META_SUBMENU, 18, 37, 8,
+    // [31] idle_color_group
+    { 31, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
+      META_SUBMENU, 18, 32, 8,
       META_VT_F32, 0.0f, 0.0f, 0.0f, META_SCOPE_PER_UNIT,
       nullptr, nullptr },
-    // [37] idle_red
-    { 37, { "Красный", "Red" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [32] idle_red
+    { 32, { "Красный", "Red" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [38] idle_orange
-    { 38, { "Оранжевый", "Orange" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [33] idle_orange
+    { 33, { "Оранжевый", "Orange" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [39] idle_yellow
-    { 39, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [34] idle_yellow
+    { 34, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [40] idle_green
-    { 40, { "Зелёный", "Green" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [35] idle_green
+    { 35, { "Зелёный", "Green" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [41] idle_cyan
-    { 41, { "Голубой", "Cyan" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [36] idle_cyan
+    { 36, { "Голубой", "Cyan" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [42] idle_blue
-    { 42, { "Синий", "Blue" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [37] idle_blue
+    { 37, { "Синий", "Blue" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [43] idle_magenta
-    { 43, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [38] idle_magenta
+    { 38, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [44] idle_white
-    { 44, { "Белый", "White" }, { nullptr, nullptr },
-      META_TOGGLE, 36, -1, 0,
+    // [39] idle_white
+    { 39, { "Белый", "White" }, { nullptr, nullptr },
+      META_TOGGLE, 31, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [45] pulse_defaults
-    { 45, { "ИМПУЛЬС", "PULSE DEFAULTS" }, { nullptr, nullptr },
-      META_SUBMENU, 0, 46, 2,
+    // [40] pulse_defaults
+    { 40, { "ИМПУЛЬС", "PULSE DEFAULTS" }, { nullptr, nullptr },
+      META_SUBMENU, 0, 41, 2,
       META_VT_F32, 0.0f, 0.0f, 0.0f, META_SCOPE_PER_UNIT,
       nullptr, nullptr },
-    // [46] pulse_color_group
-    { 46, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
-      META_SUBMENU, 45, 47, 8,
+    // [41] pulse_color_group
+    { 41, { "ЦВЕТ", "COLOR" }, { nullptr, nullptr },
+      META_SUBMENU, 40, 42, 8,
       META_VT_F32, 0.0f, 0.0f, 0.0f, META_SCOPE_PER_UNIT,
       nullptr, nullptr },
-    // [47] pulse_red
-    { 47, { "Красный", "Red" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [42] pulse_red
+    { 42, { "Красный", "Red" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [48] pulse_orange
-    { 48, { "Оранжевый", "Orange" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [43] pulse_orange
+    { 43, { "Оранжевый", "Orange" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [49] pulse_yellow
-    { 49, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [44] pulse_yellow
+    { 44, { "Жёлтый", "Yellow" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [50] pulse_green
-    { 50, { "Зелёный", "Green" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [45] pulse_green
+    { 45, { "Зелёный", "Green" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [51] pulse_cyan
-    { 51, { "Голубой", "Cyan" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [46] pulse_cyan
+    { 46, { "Голубой", "Cyan" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [52] pulse_blue
-    { 52, { "Синий", "Blue" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [47] pulse_blue
+    { 47, { "Синий", "Blue" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [53] pulse_magenta
-    { 53, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [48] pulse_magenta
+    { 48, { "Фиолетовый", "Magenta" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [54] pulse_white
-    { 54, { "Белый", "White" }, { nullptr, nullptr },
-      META_TOGGLE, 46, -1, 0,
+    // [49] pulse_white
+    { 49, { "Белый", "White" }, { nullptr, nullptr },
+      META_TOGGLE, 41, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [55] pulse_duration
-    { 55, { "ДЛИТЕЛЬНОСТЬ", "DURATION" }, { "сек", "sec" },
-      META_VALUE, 45, -1, 0,
+    // [50] pulse_duration
+    { 50, { "ДЛИТЕЛЬНОСТЬ", "DURATION" }, { "сек", "sec" },
+      META_VALUE, 40, -1, 0,
       META_VT_U16, 1.0f, 600.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [56] led_pulse
-    { 56, { "ИМПУЛЬС", "LED PULSE" }, { nullptr, nullptr },
+    // [51] led_pulse
+    { 51, { "ИМПУЛЬС", "LED PULSE" }, { nullptr, nullptr },
       META_ACTION, 0, -1, 0,
       META_VT_F32, 0.0f, 0.0f, 0.0f, META_SCOPE_PER_UNIT,
       "led.pulse", "LedPulse" },
-    // [57] ignore_external_cmd
-    { 57, { "ИГНОР. ВНЕШ. КОМАНД", "IGNOR EXT CMD" }, { nullptr, nullptr },
+    // [52] ignore_external_cmd
+    { 52, { "ИГНОР. ВНЕШ. КОМАНД", "IGNOR EXT CMD" }, { nullptr, nullptr },
       META_TOGGLE, 0, -1, 0,
       META_VT_BOOL, 0.0f, 0.0f, 1.0f, META_SCOPE_GLOBAL,
       "system.ignore_external_cmd", nullptr },
-    // [58] units_count
-    { 58, { "КОЛ-ВО ЮНИТОВ", "UNITS" }, { nullptr, nullptr },
+    // [53] units_count
+    { 53, { "КОЛ-ВО ЮНИТОВ", "UNITS" }, { nullptr, nullptr },
       META_VALUE, 0, -1, 0,
       META_VT_U8, 1.0f, 1.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },
-    // [59] language
-    { 59, { "ЯЗЫК", "LANGUAGE" }, { nullptr, nullptr },
+    // [54] language
+    { 54, { "ЯЗЫК", "LANGUAGE" }, { nullptr, nullptr },
       META_VALUE, 0, -1, 0,
       META_VT_U8, 0.0f, 1.0f, 1.0f, META_SCOPE_GLOBAL,
       nullptr, nullptr },

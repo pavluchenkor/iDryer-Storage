@@ -30,11 +30,6 @@ void MenuState::initDefaults(){
   this->anim_rainbow = false;
   this->anim_twinkle = false;
   this->anim_cycle = false;
-  this->anim_aurora = false;
-  this->anim_candle = false;
-  this->anim_ocean = false;
-  this->anim_lava = false;
-  this->anim_forest = false;
   this->anim_swell = false;
   this->anim_ripple = false;
   this->anim_spotlight = false;
@@ -94,11 +89,6 @@ void MenuState::loadFromNVS(){
   ee_read("anim_rainbow", this->anim_rainbow);
   ee_read("anim_twinkle", this->anim_twinkle);
   ee_read("anim_cycle", this->anim_cycle);
-  ee_read("anim_aurora", this->anim_aurora);
-  ee_read("anim_candle", this->anim_candle);
-  ee_read("anim_ocean", this->anim_ocean);
-  ee_read("anim_lava", this->anim_lava);
-  ee_read("anim_forest", this->anim_forest);
   ee_read("anim_swell", this->anim_swell);
   ee_read("anim_ripple", this->anim_ripple);
   ee_read("anim_spotlight", this->anim_spotlight);
@@ -153,11 +143,6 @@ void MenuState::saveToNVS(){
   ee_store_field("anim_rainbow", this->anim_rainbow);
   ee_store_field("anim_twinkle", this->anim_twinkle);
   ee_store_field("anim_cycle", this->anim_cycle);
-  ee_store_field("anim_aurora", this->anim_aurora);
-  ee_store_field("anim_candle", this->anim_candle);
-  ee_store_field("anim_ocean", this->anim_ocean);
-  ee_store_field("anim_lava", this->anim_lava);
-  ee_store_field("anim_forest", this->anim_forest);
   ee_store_field("anim_swell", this->anim_swell);
   ee_store_field("anim_ripple", this->anim_ripple);
   ee_store_field("anim_spotlight", this->anim_spotlight);

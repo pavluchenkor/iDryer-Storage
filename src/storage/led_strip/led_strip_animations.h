@@ -30,10 +30,10 @@
 //   Twinkle  — мягкие случайные «звёзды» базовым цветом — спокойный фон.
 //   Cycle    — вся лента одним цветом медленно проходит цветовое кольцо,
 //              период 60 сек (color игнорируется).
-//   Aurora   — пятна оттенков вокруг color медленно плывут по ленте.
-//   Candle   — тёплый неровно мерцающий свет (color игнорируется).
+//   Aurora   — пятна оттенков вокруг color медленно плывут по ленте.   (отключена)
+//   Candle   — тёплый неровно мерцающий свет (color игнорируется).      (отключена)
 //   Ocean / Lava / Forest — палитры FastLED медленно перетекают по ленте
-//              (color игнорируется).
+//              (color игнорируется).                                   (отключены)
 //   Swell    — по ленте бежит синус яркости, 4 волны на ленту.
 //   Ripple   — две встречные синусоиды яркости разной длины.
 //   Spotlight— светлое окно в четверть ленты ходит туда-обратно по тусклому фону.
@@ -46,24 +46,25 @@
 class LedStripExecutor;
 class CRGB;
 
-// Тип анимации. Соответствует пунктам toggle-группы в меню (anim_*) +
-// дополнительным значениям доступным через invoke (twinkle).
+// Тип анимации. Значение = индекс пункта в toggle-группе меню (anim_*,
+// kAnimBinds в led_strip_menu.cpp): порядок в обоих местах один.
 enum class AnimKind : uint8_t {
     Solid   = 0,
-    Breathe = 1,
-    Wave    = 2,
-    Rainbow = 3,
-    Twinkle = 4,
-    Cycle   = 5,
-    Aurora  = 6,
-    Candle  = 7,
-    Ocean   = 8,
-    Lava    = 9,
-    Forest  = 10,
-    Swell     = 11,
-    Ripple    = 12,
-    Spotlight = 13,
-    Duo       = 14,
+    Breathe,
+    Wave,
+    Rainbow,
+    Twinkle,
+    Cycle,
+    // Отключено (место на флеше): aurora, candle, ocean, lava, forest.
+    // Aurora,
+    // Candle,
+    // Ocean,
+    // Lava,
+    // Forest,
+    Swell,
+    Ripple,
+    Spotlight,
+    Duo,
 };
 
 // Парсер строкового имени из payload (`"solid"`/`"wave"` etc).

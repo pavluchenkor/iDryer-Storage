@@ -49,24 +49,25 @@ constexpr uint32_t kRainbowPeriodMs   = 120000; // 2 мин на полный к
 constexpr uint32_t kRainbowSpan16     = 65536 / 3;  // вся лента — треть кольца hue
 constexpr uint32_t kCyclePeriodMs     = 60000;  // 60 сек на полный круг цвета
 
-// Aurora: пятна близких к выбранному цвету оттенков медленно плывут по ленте.
-constexpr uint16_t kAuroraScale       = 12;     // шаг шума на LED: пятно ~20 LED
-constexpr uint32_t kAuroraCellMs      = 8000;   // скорость перетекания пятен
-constexpr uint8_t  kAuroraHueSpread   = 24;     // отклонение hue от выбранного, ±
-constexpr uint8_t  kAuroraMinV        = 40;     // яркость самых тёмных мест (0-255)
+// Отключено (место на флеше): aurora, candle, ocean, lava, forest.
+// // Aurora: пятна близких к выбранному цвету оттенков медленно плывут по ленте.
+// constexpr uint16_t kAuroraScale       = 12;     // шаг шума на LED: пятно ~20 LED
+// constexpr uint32_t kAuroraCellMs      = 8000;   // скорость перетекания пятен
+// constexpr uint8_t  kAuroraHueSpread   = 24;     // отклонение hue от выбранного, ±
+// constexpr uint8_t  kAuroraMinV        = 40;     // яркость самых тёмных мест (0-255)
 
-// Candle: тёплый свет, яркость и оттенок неравномерно колеблются.
-constexpr uint16_t kCandleScale       = 48;     // шаг шума на LED: «язычок» ~5 LED
-constexpr uint32_t kCandleCellMs      = 700;    // скорость мерцания
-constexpr uint8_t  kCandleHueLow      = 12;     // тусклее — краснее
-constexpr uint8_t  kCandleHueHigh     = 28;     // ярче — желтее
-constexpr uint8_t  kCandleSat         = 220;
-constexpr uint8_t  kCandleMinV        = 110;
+// // Candle: тёплый свет, яркость и оттенок неравномерно колеблются.
+// constexpr uint16_t kCandleScale       = 48;     // шаг шума на LED: «язычок» ~5 LED
+// constexpr uint32_t kCandleCellMs      = 700;    // скорость мерцания
+// constexpr uint8_t  kCandleHueLow      = 12;     // тусклее — краснее
+// constexpr uint8_t  kCandleHueHigh     = 28;     // ярче — желтее
+// constexpr uint8_t  kCandleSat         = 220;
+// constexpr uint8_t  kCandleMinV        = 110;
 
-// Ocean / Lava / Forest: палитра FastLED, раскинутая по ленте шумом.
-constexpr uint16_t kPaletteScale      = 10;     // шаг шума на LED: пятно ~25 LED
-constexpr uint32_t kPaletteCellMs     = 10000;  // скорость перетекания пятен
-constexpr uint32_t kPaletteDriftMs    = 120000; // сдвиг по всей палитре за 2 мин
+// // Ocean / Lava / Forest: палитра FastLED, раскинутая по ленте шумом.
+// constexpr uint16_t kPaletteScale      = 10;     // шаг шума на LED: пятно ~25 LED
+// constexpr uint32_t kPaletteCellMs     = 10000;  // скорость перетекания пятен
+// constexpr uint32_t kPaletteDriftMs    = 120000; // сдвиг по всей палитре за 2 мин
 
 // Swell: по ленте выбранного цвета бежит синус яркости.
 constexpr uint8_t  kSwellWaves        = 4;      // волн на ленту
@@ -154,11 +155,11 @@ uint16_t phase16(uint32_t phaseMs, uint32_t periodMs) {
     return (uint16_t)((uint64_t)(phaseMs % periodMs) * 65536u / periodMs);
 }
 
-// Координата времени для inoise8: одна ячейка шума (256) за cellMs.
-// Переполнение uint16 скачка не даёт: шум FastLED периодичен по 65536.
-uint16_t noiseTime(uint32_t phaseMs, uint32_t cellMs) {
-    return (uint16_t)((uint64_t)phaseMs * 256u / cellMs);
-}
+// // Координата времени для inoise8: одна ячейка шума (256) за cellMs.
+// // Переполнение uint16 скачка не даёт: шум FastLED периодичен по 65536.
+// uint16_t noiseTime(uint32_t phaseMs, uint32_t cellMs) {
+//     return (uint16_t)((uint64_t)phaseMs * 256u / cellMs);
+// }
 
 // Угол синуса (0..255) для LED i: waves волн на ленту, сдвинутых на shift.
 uint8_t waveAngle(uint16_t i, uint16_t n, uint8_t waves, uint16_t shift) {
@@ -184,27 +185,27 @@ void renderCycle(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB /*color*/) {
     fill_solid(dst, n, hueColor(phase16(phaseMs, kCyclePeriodMs)));
 }
 
-// Aurora: один слой шума сдвигает hue вокруг выбранного цвета, второй —
-// яркость. Белый цвет даёт только игру яркости (насыщенность 0).
-void renderAurora(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB color) {
-    CHSV     base = rgb2hsv_approximate(color);
-    uint16_t t    = noiseTime(phaseMs, kAuroraCellMs);
-    for (uint16_t i = 0; i < n; i++) {
-        uint16_t x  = i * kAuroraScale;
-        int16_t  dh = ((int16_t)inoise8(x, t) - 128) * kAuroraHueSpread / 128;
-        uint8_t  v  = lerp8by8(kAuroraMinV, 255, inoise8(x + 20000, t + 10000));
-        dst[i] = CHSV((uint8_t)(base.hue + dh), base.sat, v);
-    }
-}
+// // Aurora: один слой шума сдвигает hue вокруг выбранного цвета, второй —
+// // яркость. Белый цвет даёт только игру яркости (насыщенность 0).
+// void renderAurora(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB color) {
+//     CHSV     base = rgb2hsv_approximate(color);
+//     uint16_t t    = noiseTime(phaseMs, kAuroraCellMs);
+//     for (uint16_t i = 0; i < n; i++) {
+//         uint16_t x  = i * kAuroraScale;
+//         int16_t  dh = ((int16_t)inoise8(x, t) - 128) * kAuroraHueSpread / 128;
+//         uint8_t  v  = lerp8by8(kAuroraMinV, 255, inoise8(x + 20000, t + 10000));
+//         dst[i] = CHSV((uint8_t)(base.hue + dh), base.sat, v);
+//     }
+// }
 
-void renderCandle(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB /*color*/) {
-    uint16_t t = noiseTime(phaseMs, kCandleCellMs);
-    for (uint16_t i = 0; i < n; i++) {
-        uint8_t f = inoise8(i * kCandleScale, t);
-        dst[i] = CHSV(lerp8by8(kCandleHueLow, kCandleHueHigh, f), kCandleSat,
-                      lerp8by8(kCandleMinV, 255, f));
-    }
-}
+// void renderCandle(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB /*color*/) {
+//     uint16_t t = noiseTime(phaseMs, kCandleCellMs);
+//     for (uint16_t i = 0; i < n; i++) {
+//         uint8_t f = inoise8(i * kCandleScale, t);
+//         dst[i] = CHSV(lerp8by8(kCandleHueLow, kCandleHueHigh, f), kCandleSat,
+//                       lerp8by8(kCandleMinV, 255, f));
+//     }
+// }
 
 void renderSwell(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB color) {
     uint16_t shift = phase16(phaseMs, kSwellPeriodMs);
@@ -254,14 +255,14 @@ void renderDuo(CRGB* dst, uint16_t n, uint32_t phaseMs, CRGB color) {
     }
 }
 
-void renderPalette(CRGB* dst, uint16_t n, uint32_t phaseMs, const CRGBPalette16& pal) {
-    uint16_t t     = noiseTime(phaseMs, kPaletteCellMs);
-    uint8_t  drift = phase16(phaseMs, kPaletteDriftMs) >> 8;
-    for (uint16_t i = 0; i < n; i++) {
-        uint8_t idx = inoise8(i * kPaletteScale, t) + drift;
-        dst[i] = ColorFromPalette(pal, idx, 255, LINEARBLEND);
-    }
-}
+// void renderPalette(CRGB* dst, uint16_t n, uint32_t phaseMs, const CRGBPalette16& pal) {
+//     uint16_t t     = noiseTime(phaseMs, kPaletteCellMs);
+//     uint8_t  drift = phase16(phaseMs, kPaletteDriftMs) >> 8;
+//     for (uint16_t i = 0; i < n; i++) {
+//         uint8_t idx = inoise8(i * kPaletteScale, t) + drift;
+//         dst[i] = ColorFromPalette(pal, idx, 255, LINEARBLEND);
+//     }
+// }
 
 // Twinkle: тёмный фон (~10% яркости) + редкие случайные вспышки LED с плавным угасанием за kTwinkleFadeMs.
 constexpr uint8_t  kTwinkleBaseScale = 26;     // ~10% яркости (26/255)
@@ -313,11 +314,11 @@ bool parseAnimationName(const char* name, AnimKind& out) {
     if (strcmp(name, "rainbow") == 0) { out = AnimKind::Rainbow; return true; }
     if (strcmp(name, "twinkle") == 0) { out = AnimKind::Twinkle; return true; }
     if (strcmp(name, "cycle")   == 0) { out = AnimKind::Cycle;   return true; }
-    if (strcmp(name, "aurora")  == 0) { out = AnimKind::Aurora;  return true; }
-    if (strcmp(name, "candle")  == 0) { out = AnimKind::Candle;  return true; }
-    if (strcmp(name, "ocean")   == 0) { out = AnimKind::Ocean;   return true; }
-    if (strcmp(name, "lava")    == 0) { out = AnimKind::Lava;    return true; }
-    if (strcmp(name, "forest")  == 0) { out = AnimKind::Forest;  return true; }
+    // if (strcmp(name, "aurora")  == 0) { out = AnimKind::Aurora;  return true; }
+    // if (strcmp(name, "candle")  == 0) { out = AnimKind::Candle;  return true; }
+    // if (strcmp(name, "ocean")   == 0) { out = AnimKind::Ocean;   return true; }
+    // if (strcmp(name, "lava")    == 0) { out = AnimKind::Lava;    return true; }
+    // if (strcmp(name, "forest")  == 0) { out = AnimKind::Forest;  return true; }
     if (strcmp(name, "swell")     == 0) { out = AnimKind::Swell;     return true; }
     if (strcmp(name, "ripple")    == 0) { out = AnimKind::Ripple;    return true; }
     if (strcmp(name, "spotlight") == 0) { out = AnimKind::Spotlight; return true; }
@@ -397,11 +398,11 @@ void animationsLoop(uint32_t nowMs) {
             case AnimKind::Rainbow: renderRainbow(target, n, phase, g_color); break;
             case AnimKind::Twinkle: renderTwinkle(target, n, phase, g_color); break;
             case AnimKind::Cycle:   renderCycle(target,   n, phase, g_color); break;
-            case AnimKind::Aurora:  renderAurora(target,  n, phase, g_color); break;
-            case AnimKind::Candle:  renderCandle(target,  n, phase, g_color); break;
-            case AnimKind::Ocean:   renderPalette(target, n, phase, OceanColors_p);  break;
-            case AnimKind::Lava:    renderPalette(target, n, phase, LavaColors_p);   break;
-            case AnimKind::Forest:  renderPalette(target, n, phase, ForestColors_p); break;
+            // case AnimKind::Aurora:  renderAurora(target,  n, phase, g_color); break;
+            // case AnimKind::Candle:  renderCandle(target,  n, phase, g_color); break;
+            // case AnimKind::Ocean:   renderPalette(target, n, phase, OceanColors_p);  break;
+            // case AnimKind::Lava:    renderPalette(target, n, phase, LavaColors_p);   break;
+            // case AnimKind::Forest:  renderPalette(target, n, phase, ForestColors_p); break;
             case AnimKind::Swell:     renderSwell(target,     n, phase, g_color); break;
             case AnimKind::Ripple:    renderRipple(target,    n, phase, g_color); break;
             case AnimKind::Spotlight: renderSpotlight(target, n, phase, g_color); break;
