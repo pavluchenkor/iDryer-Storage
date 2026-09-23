@@ -228,7 +228,9 @@ static void publishMenuDelta(const uint16_t *ids, uint8_t count) {
   if (!ids || count == 0)
     return;
 
-  StaticJsonDocument<256> doc;
+  // Размеры под самую большую эксклюзивную группу — 10 анимаций. При
+  // переполнении дельта не уходит вообще, поэтому запас важнее байтов.
+  StaticJsonDocument<384> doc;
   doc["rev"] = ++s_deltaRev;
   JsonObject d = doc.createNestedObject("d");
 
@@ -267,7 +269,7 @@ static void publishMenuDelta(const uint16_t *ids, uint8_t count) {
     return;
   }
 
-  char buf[192];
+  char buf[256];
   const size_t len = serializeJson(doc, buf, sizeof(buf));
   if (len == 0) {
     HAL_LOG_ERROR("MENU", "delta serialize failed");
@@ -276,6 +278,31 @@ static void publishMenuDelta(const uint16_t *ids, uint8_t count) {
   s_link.devicePublisher()->publishConfigDelta(buf, len);
   HAL_LOG_INFO("MENU", "delta published: %u bytes, rev %u", (unsigned)len,
                (unsigned)s_deltaRev);
+}
+
+// ── Сбор фактически изменённых пунктов за одну команду set ────────────
+// В эксклюзивной группе (chipset / order / animation / idle color / pulse
+// color) одна команда переписывает всю группу: включает выбранный пункт и
+// гасит остальные. Если в дельту класть только id из команды, портал и
+// приложение не узнают про погашенный toggle и покажут два включённых до
+// следующего полного конфига. Хук ловит каждую запись в меню, а обработчик
+// set публикует дельту по всему собранному списку.
+static constexpr uint8_t kMenuTouchedMax = 12; // самая большая группа — 10 анимаций
+static uint16_t s_touchedIds[kMenuTouchedMax];
+static uint8_t s_touchedCount = 0;
+static bool s_touchedCollecting = false;
+
+static void onMenuItemWritten(uint16_t itemId, uint8_t /*unit*/,
+                              const char * /*bind*/) {
+  if (!s_touchedCollecting)
+    return;
+  // Per-unit пункт пишется по разу на юнит — в дельту достаточно одного id,
+  // значения по всем юнитам publishMenuDelta соберёт сам.
+  for (uint8_t i = 0; i < s_touchedCount; i++)
+    if (s_touchedIds[i] == itemId)
+      return;
+  if (s_touchedCount < kMenuTouchedMax)
+    s_touchedIds[s_touchedCount++] = itemId;
 }
 
 // Продуктовые команды портала/Local-WS (get_config/set/invoke). Встроенные
@@ -326,6 +353,10 @@ static void declareCardActions() {
 }
 
 static void registerCommands() {
+  // Хук на запись пункта меню — обработчик set собирает по нему всю
+  // эксклюзивную группу. Вне обработки set ничего не делает.
+  menu_set_config_change_hook(onMenuItemWritten);
+
   // Не публикуем прямо здесь: колбэк вызывается из разбора входящего
   // MQTT-сообщения, то есть глубоко в стеке. Генерация меню сверху переполняет
   // стек loopTask — так падал iHeater. Ставим флаг, публикуем из loop().
@@ -372,12 +403,23 @@ static void registerCommands() {
       return;
     }
 
-    if (id >= 0 && val >= 0 &&
-        applyConfigChange(id, val, s_executor, onMenuChanged)) {
+    s_touchedCount = 0;
+    s_touchedCollecting = true;
+    const bool applied =
+        (id >= 0 && val >= 0 &&
+         applyConfigChange(id, val, s_executor, onMenuChanged));
+    s_touchedCollecting = false;
+
+    if (applied) {
       // Подтверждение правки — дельтой: UI видит изменение без запроса, а
-      // полное меню не собирается в стеке колбэка.
-      const uint16_t changed[1] = {(uint16_t)id};
-      publishMenuDelta(changed, 1);
+      // полное меню не собирается в стеке колбэка. Для эксклюзивной группы
+      // список содержит и включённый пункт, и погашенные.
+      if (s_touchedCount > 0) {
+        publishMenuDelta(s_touchedIds, s_touchedCount);
+      } else {
+        const uint16_t changed[1] = {(uint16_t)id};
+        publishMenuDelta(changed, 1);
+      }
     } else {
       HAL_LOG_WARN("MAIN", "set ignored: id=%d val=%d (bad/unsupported)", id,
                    val);
@@ -550,8 +592,8 @@ void setup() {
   registerCommands();
   declareCardActions();
 
-  // Из интеграций у Storage только HA: без выбора активной менеджер её не запускает.
-  s_link.integrationsManager()->setActive(idryer::cloud::ActiveIntegration::Ha);
+  // Из интеграций у Storage только HA: без включения менеджер её не запускает.
+  s_link.integrationsManager()->setHaEnabled(true);
 
 #ifdef IDRYER_DEV_REPL
   Serial.println(F("\n[boot] iDryer dev REPL ready — type 'help'"));

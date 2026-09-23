@@ -31,6 +31,10 @@ Notable changes to the `iDryer-Storage` firmware — the filament storage cabine
 - **The device declares its integrations.** The portal and the app draw only what the cabinet actually has.
 - Telemetry and status periods come from the contract.
 
+### Fixed
+
+- **The app and the portal showed several animations switched on at once.** Where the choice is single — animation, idle colour, LED chipset and colour order — the device confirmed only the item that was tapped, so the neighbours it had just turned off stayed green until the screen was reloaded. The confirmation now covers the whole group.
+
 ### Removed
 
 - Five noise-based animations — aurora, candle, ocean, lava and forest. They cost 3.7 KB of flash, which the cabinet needed elsewhere; the code is kept, commented out, next to the remaining effects.
