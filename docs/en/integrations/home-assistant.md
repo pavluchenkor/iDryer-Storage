@@ -4,7 +4,7 @@ Storage Link publishes itself to Home Assistant via **MQTT Discovery**: HA creat
 
 Below: enabling the integration, verification and a ready-made card layout, so that the device looks tidy rather than a list of entities.
 
-![The Storage Link card in Home Assistant](../../img/ha-card.png)
+![The Storage Link card in Home Assistant](../../img/storage-ha-card.png)
 *Sensor readings and LED strip control in a single block.*
 
 !!! note
@@ -30,14 +30,14 @@ Open the device at [portal.idryer.org](https://portal.idryer.org/) and find the 
 
 The settings go straight to the device over the local network — the portal does not store them.
 
-![The Home Assistant window in the "Integrations" block on the portal](../../img/ha-portal-integration.png)
+![The Home Assistant window in the "Integrations" block on the portal](../../img/storage-ha-portal-integration.png)
 *The broker address, port and the "Enabled" flag — everything the device needs.*
 
 ## Step 2. Find the device in Home Assistant
 
 `Settings` → `Devices & services` → the **MQTT** card → in the **Services** section expand the broker node. iDryer devices are listed under serial numbers of the form `DEVICE_*`.
 
-![iDryer devices on the MQTT integration page](../../img/ha-mqtt-devices.png)
+![iDryer devices on the MQTT integration page](../../img/storage-ha-mqtt-devices.png)
 *Devices under the broker node; the Storage shows its entity count.*
 
 Open the device: HA already shows the readings and the LED strip controls.
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![Raw configuration editor with the layout pasted in](../../img/ha-raw-editor.png)
+![Raw configuration editor with the layout pasted in](../../img/storage-ha-raw-editor.png)
 *The same layout in the dashboard configuration editor.*
 
 The color is set as a string in the **Color** field — a six-digit HEX without the hash, for example `FF8800`. The animation is picked from a list that the device publishes itself: older Storage firmware has fewer options.

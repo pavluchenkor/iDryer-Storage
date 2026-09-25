@@ -4,7 +4,7 @@ Storage Link は **MQTT Discovery** によって Home Assistant に自身を公�
 
 以下では、連携の有効化、動作確認、そして本機がエンティティの羅列ではなく整った形で表示されるためのカードレイアウトを説明します。
 
-![Home Assistant の Storage Link カード](../../img/ha-card.png)
+![Home Assistant の Storage Link カード](../../img/storage-ha-card.png)
 *センサーの測定値と LED テープの操作を 1 つのブロックにまとめた状態。*
 
 !!! note
@@ -30,14 +30,14 @@ Storage Link は **MQTT Discovery** によって Home Assistant に自身を公�
 
 設定はローカルネットワーク経由で本機に直接送信されます。ポータルは保存しません。
 
-![ポータルの「連携」ブロックにある Home Assistant のウィンドウ](../../img/ha-portal-integration.png)
+![ポータルの「連携」ブロックにある Home Assistant のウィンドウ](../../img/storage-ha-portal-integration.png)
 *ブローカーのアドレス、ポート、「有効」のチェック — 本機に必要なのはこれだけです。*
 
 ## ステップ 2. Home Assistant でデバイスを探す
 
 `Settings` → `Devices & services` → **MQTT** のカード → **Services** セクションでブローカーのノードを展開します。iDryer の機器は `DEVICE_*` 形式のシリアル番号で表示されます。
 
-![MQTT 連携のページに表示された iDryer の機器](../../img/ha-mqtt-devices.png)
+![MQTT 連携のページに表示された iDryer の機器](../../img/storage-ha-mqtt-devices.png)
 *ブローカーのノード配下にあるデバイス。Storage にはエンティティ数が表示されます。*
 
 デバイスを開くと、HA にはすでに測定値と LED テープの操作要素が表示されています。
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![レイアウトを貼り付けた Raw configuration editor](../../img/ha-raw-editor.png)
+![レイアウトを貼り付けた Raw configuration editor](../../img/storage-ha-raw-editor.png)
 *ダッシュボードの設定エディタに表示された同じレイアウト。*
 
 色は **色** の項目に文字列で指定します。先頭の「#」を付けない 6 桁の HEX 値（例: `FF8800`）です。アニメーションは本機が自ら公開するリストから選択します。古いファームウェアの Storage では選択肢が少なくなります。

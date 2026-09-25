@@ -4,7 +4,7 @@ Storage Link se do Home Assistant publikuje přes **MQTT Discovery**: HA sám vy
 
 Níže je zapnutí integrace, kontrola a hotové rozložení karty, aby zařízení vypadalo úhledně, a ne jako seznam entit.
 
-![Karta Storage Link v Home Assistant](../../img/ha-card.png)
+![Karta Storage Link v Home Assistant](../../img/storage-ha-card.png)
 *Hodnoty ze snímače a ovládání pásku v jednom bloku.*
 
 !!! note
@@ -30,14 +30,14 @@ Otevřete zařízení na [portal.idryer.org](https://portal.idryer.org/) a najd�
 
 Nastavení jde přímo do zařízení po místní síti — portál je neukládá.
 
-![Okno Home Assistant v bloku „Integrace“ na portálu](../../img/ha-portal-integration.png)
+![Okno Home Assistant v bloku „Integrace“ na portálu](../../img/storage-ha-portal-integration.png)
 *Adresa brokeru, port a příznak „Zapnuto“ — vše, co zařízení potřebuje.*
 
 ## Krok 2. Najít zařízení v Home Assistant
 
 `Settings` → `Devices & services` → karta **MQTT** → v sekci **Services** rozbalte uzel brokeru. Zařízení iDryer jsou vidět pod sériovými čísly ve tvaru `DEVICE_*`.
 
-![Zařízení iDryer na stránce integrace MQTT](../../img/ha-mqtt-devices.png)
+![Zařízení iDryer na stránce integrace MQTT](../../img/storage-ha-mqtt-devices.png)
 *Zařízení pod uzlem brokeru; u Storage je vidět počet entit.*
 
 Otevřete zařízení: HA už ukazuje hodnoty a ovládací prvky pásku.
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![Raw configuration editor s vloženým rozložením](../../img/ha-raw-editor.png)
+![Raw configuration editor s vloženým rozložením](../../img/storage-ha-raw-editor.png)
 *Totéž rozložení v editoru konfigurace dashboardu.*
 
 Barva se zadává řetězcem v poli **Barva** — šestimístný HEX bez mřížky, například `FF8800`. Animace se vybírá ze seznamu, který zařízení publikuje samo: u starších firmwarů Storage je variant méně.

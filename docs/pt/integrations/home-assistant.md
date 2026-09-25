@@ -4,7 +4,7 @@ O Storage Link publica-se no Home Assistant através de **MQTT Discovery**: o HA
 
 A seguir: como ativar a integração, como verificar e uma disposição de cartão pronta a usar, para que o dispositivo fique com bom aspeto e não como uma lista de entidades.
 
-![Cartão do Storage Link no Home Assistant](../../img/ha-card.png)
+![Cartão do Storage Link no Home Assistant](../../img/storage-ha-card.png)
 *Leituras do sensor e controlo da fita num único bloco.*
 
 !!! note
@@ -30,14 +30,14 @@ Abra o dispositivo em [portal.idryer.org](https://portal.idryer.org/) e encontre
 
 As definições vão diretamente para o dispositivo através da rede local — o portal não as guarda.
 
-![Janela do Home Assistant no bloco «Integrações» do portal](../../img/ha-portal-integration.png)
+![Janela do Home Assistant no bloco «Integrações» do portal](../../img/storage-ha-portal-integration.png)
 *O endereço do broker, a porta e a marca «Ativado» — tudo o que o dispositivo precisa.*
 
 ## Passo 2. Encontrar o dispositivo no Home Assistant
 
 `Settings` → `Devices & services` → cartão **MQTT** → na secção **Services**, expanda o nó do broker. Os dispositivos iDryer aparecem com números de série no formato `DEVICE_*`.
 
-![Dispositivos iDryer na página da integração MQTT](../../img/ha-mqtt-devices.png)
+![Dispositivos iDryer na página da integração MQTT](../../img/storage-ha-mqtt-devices.png)
 *Dispositivos sob o nó do broker; no Storage vê-se o número de entidades.*
 
 Abra o dispositivo: o HA já mostra as leituras e os elementos de controlo da fita.
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![Raw configuration editor com a disposição colada](../../img/ha-raw-editor.png)
+![Raw configuration editor com a disposição colada](../../img/storage-ha-raw-editor.png)
 *A mesma disposição no editor de configuração do painel.*
 
 A cor é indicada como texto no campo **Cor** — HEX de seis dígitos sem cardinal, por exemplo `FF8800`. A animação escolhe-se numa lista que o próprio dispositivo publica: nos firmwares antigos do Storage há menos opções.

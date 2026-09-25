@@ -4,7 +4,7 @@ Storage Link 透過 **MQTT Discovery** 在 Home Assistant 中發布自己：HA �
 
 以下是啟用整合、檢查，以及現成的卡片版面配置，讓裝置看起來整齊，而不是一串實體清單。
 
-![Home Assistant 中的 Storage Link 卡片](../../img/ha-card.png)
+![Home Assistant 中的 Storage Link 卡片](../../img/storage-ha-card.png)
 *感測器讀數與燈條控制集中在一個區塊。*
 
 !!! note
@@ -30,14 +30,14 @@ Storage Link 透過 **MQTT Discovery** 在 Home Assistant 中發布自己：HA �
 
 設定會透過本機網路直接送到裝置——入口不會保存這些設定。
 
-![入口「整合」區塊中的 Home Assistant 視窗](../../img/ha-portal-integration.png)
+![入口「整合」區塊中的 Home Assistant 視窗](../../img/storage-ha-portal-integration.png)
 *代理伺服器位址、連接埠和「啟用」標記——這就是裝置所需的全部內容。*
 
 ## 步驟 2. 在 Home Assistant 中找到裝置
 
 `Settings` → `Devices & services` → **MQTT** 卡片 → 在 **Services** 區段中展開代理伺服器節點。iDryer 裝置以 `DEVICE_*` 形式的序號顯示。
 
-![MQTT 整合頁面上的 iDryer 裝置](../../img/ha-mqtt-devices.png)
+![MQTT 整合頁面上的 iDryer 裝置](../../img/storage-ha-mqtt-devices.png)
 *代理伺服器節點下的裝置；Storage 處可看到實體數量。*
 
 開啟裝置：HA 已經顯示讀數與燈條控制元件。
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![貼上版面配置後的 Raw configuration editor](../../img/ha-raw-editor.png)
+![貼上版面配置後的 Raw configuration editor](../../img/storage-ha-raw-editor.png)
 *儀表板設定編輯器中的同一份版面配置。*
 
 顏色以字串形式填入 **顏色** 欄位——六位數的 HEX，不含井號，例如 `FF8800`。動畫效果從裝置自行發布的清單中選擇：舊韌體的 Storage 選項較少。

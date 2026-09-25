@@ -4,7 +4,7 @@ Storage Link se publie dans Home Assistant via **MQTT Discovery** : HA crée lui
 
 Ci-dessous : l'activation de l'intégration, la vérification et une disposition de carte prête à l'emploi, pour que l'appareil ait un aspect soigné et non celui d'une liste d'entités.
 
-![Carte Storage Link dans Home Assistant](../../img/ha-card.png)
+![Carte Storage Link dans Home Assistant](../../img/storage-ha-card.png)
 *Les relevés du capteur et la commande du ruban dans un seul bloc.*
 
 !!! note
@@ -30,14 +30,14 @@ Ouvrez l'appareil sur [portal.idryer.org](https://portal.idryer.org/) et trouvez
 
 Les paramètres sont transmis directement à l'appareil via le réseau local — le portail ne les conserve pas.
 
-![Fenêtre Home Assistant dans le bloc « Intégrations » du portail](../../img/ha-portal-integration.png)
+![Fenêtre Home Assistant dans le bloc « Intégrations » du portail](../../img/storage-ha-portal-integration.png)
 *L'adresse du broker, le port et la case « Activé » — c'est tout ce dont l'appareil a besoin.*
 
 ## Étape 2. Trouver l'appareil dans Home Assistant
 
 `Settings` → `Devices & services` → carte **MQTT** → dans la section **Services**, développez le nœud du broker. Les appareils iDryer y figurent sous des numéros de série de la forme `DEVICE_*`.
 
-![Appareils iDryer sur la page de l'intégration MQTT](../../img/ha-mqtt-devices.png)
+![Appareils iDryer sur la page de l'intégration MQTT](../../img/storage-ha-mqtt-devices.png)
 *Les appareils sous le nœud du broker ; pour Storage, le nombre d'entités est indiqué.*
 
 Ouvrez l'appareil : HA affiche déjà les relevés et les éléments de commande du ruban.
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![Raw configuration editor avec la disposition collée](../../img/ha-raw-editor.png)
+![Raw configuration editor avec la disposition collée](../../img/storage-ha-raw-editor.png)
 *La même disposition dans l'éditeur de configuration du tableau de bord.*
 
 La couleur se saisit sous forme de chaîne dans le champ **Couleur** — un code HEX à six chiffres sans dièse, par exemple `FF8800`. L'animation se choisit dans la liste que l'appareil publie lui-même : les anciens micrologiciels de Storage proposent moins d'options.

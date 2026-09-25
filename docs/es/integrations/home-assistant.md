@@ -4,7 +4,7 @@ Storage Link se publica en Home Assistant mediante **MQTT Discovery**: HA crea l
 
 A continuación: activación de la integración, comprobación y una disposición de tarjeta lista para usar, para que el dispositivo se vea ordenado y no como una lista de entidades.
 
-![Tarjeta de Storage Link en Home Assistant](../../img/ha-card.png)
+![Tarjeta de Storage Link en Home Assistant](../../img/storage-ha-card.png)
 *Lecturas del sensor y control de la tira en un solo bloque.*
 
 !!! note
@@ -30,14 +30,14 @@ Abre el dispositivo en [portal.idryer.org](https://portal.idryer.org/) y busca e
 
 Los ajustes van directamente al dispositivo por la red local — el portal no los guarda.
 
-![Ventana de Home Assistant en el bloque «Integraciones» del portal](../../img/ha-portal-integration.png)
+![Ventana de Home Assistant en el bloque «Integraciones» del portal](../../img/storage-ha-portal-integration.png)
 *Dirección del broker, puerto y la marca «Activado» — todo lo que el dispositivo necesita.*
 
 ## Paso 2. Encontrar el dispositivo en Home Assistant
 
 `Settings` → `Devices & services` → tarjeta **MQTT** → en la sección **Services** despliega el nodo del broker. Los dispositivos iDryer se ven bajo números de serie del tipo `DEVICE_*`.
 
-![Dispositivos iDryer en la página de la integración MQTT](../../img/ha-mqtt-devices.png)
+![Dispositivos iDryer en la página de la integración MQTT](../../img/storage-ha-mqtt-devices.png)
 *Dispositivos bajo el nodo del broker; en el Storage se ve el número de entidades.*
 
 Abre el dispositivo: HA ya muestra las lecturas y los elementos de control de la tira.
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![Raw configuration editor con la disposición pegada](../../img/ha-raw-editor.png)
+![Raw configuration editor con la disposición pegada](../../img/storage-ha-raw-editor.png)
 *La misma disposición en el editor de configuración del dashboard.*
 
 El color se indica como texto en el campo **Color** — un HEX de seis dígitos sin almohadilla, por ejemplo `FF8800`. La animación se elige de la lista que el propio dispositivo publica: en los firmware antiguos del Storage hay menos opciones.

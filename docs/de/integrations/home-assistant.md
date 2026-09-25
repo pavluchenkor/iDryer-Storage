@@ -4,7 +4,7 @@ Storage Link meldet sich in Home Assistant über **MQTT Discovery** an: HA erste
 
 Nachfolgend: die Integration einschalten, prüfen und ein fertiges Karten-Layout, damit das Gerät aufgeräumt aussieht und nicht wie eine Liste von Entitäten.
 
-![Karte von Storage Link in Home Assistant](../../img/ha-card.png)
+![Karte von Storage Link in Home Assistant](../../img/storage-ha-card.png)
 *Die Messwerte des Sensors und die Steuerung des Bands in einem Block.*
 
 !!! note
@@ -30,14 +30,14 @@ Nachfolgend: die Integration einschalten, prüfen und ein fertiges Karten-Layout
 
 Die Einstellungen gehen über das lokale Netzwerk direkt an das Gerät — das Portal speichert sie nicht.
 
-![Das Fenster Home Assistant im Block „Integrationen“ auf dem Portal](../../img/ha-portal-integration.png)
+![Das Fenster Home Assistant im Block „Integrationen“ auf dem Portal](../../img/storage-ha-portal-integration.png)
 *Die Adresse des Brokers, der Port und das Kennzeichen „Aktiviert“ — mehr braucht das Gerät nicht.*
 
 ## Schritt 2. Das Gerät in Home Assistant finden
 
 `Settings` → `Devices & services` → die Karte **MQTT** → klappen Sie im Abschnitt **Services** den Knoten des Brokers auf. Die iDryer-Geräte erscheinen unter Seriennummern der Form `DEVICE_*`.
 
-![iDryer-Geräte auf der Seite der MQTT-Integration](../../img/ha-mqtt-devices.png)
+![iDryer-Geräte auf der Seite der MQTT-Integration](../../img/storage-ha-mqtt-devices.png)
 *Die Geräte unter dem Knoten des Brokers; bei Storage ist die Anzahl der Entitäten zu sehen.*
 
 Öffnen Sie das Gerät: HA zeigt bereits die Messwerte und die Bedienelemente des Bands.
@@ -128,7 +128,7 @@ views:
       icon_tap_action: *id002
 ```
 
-![Raw configuration editor mit dem eingefügten Layout](../../img/ha-raw-editor.png)
+![Raw configuration editor mit dem eingefügten Layout](../../img/storage-ha-raw-editor.png)
 *Dasselbe Layout im Konfigurationseditor des Dashboards.*
 
 Die Farbe wird als Zeichenkette im Feld **Farbe** angegeben — sechsstelliger HEX-Wert ohne Raute, zum Beispiel `FF8800`. Die Animation wird aus einer Liste gewählt, die das Gerät selbst veröffentlicht: Bei älteren Storage-Firmwares gibt es weniger Varianten.
