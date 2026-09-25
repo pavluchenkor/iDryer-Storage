@@ -4,7 +4,8 @@ Storage Link публикует себя в Home Assistant через **MQTT Dis
 
 Ниже — включение интеграции, проверка и готовая раскладка карточки, чтобы прибор выглядел аккуратно, а не списком сущностей.
 
-<!-- СКРИНШОТ: итоговая карточка Storage Link в Home Assistant -->
+![Карточка Storage Link в Home Assistant](../../img/ha-card.png)
+*Показания датчика и управление лентой одним блоком.*
 
 !!! note
     Устройство **не появится** в `Settings → Devices & services → Discovered`: это MQTT Discovery, а не UPnP/zeroconf. Интеграция **MQTT** в Home Assistant должна быть добавлена заранее.
@@ -21,7 +22,7 @@ Storage Link публикует себя в Home Assistant через **MQTT Dis
 
 | Поле | Что вписать |
 |---|---|
-| Host | адрес брокера в вашей сети, например `192.168.1.60` |
+| Host | адрес брокера в вашей сети, например `192.168.1.27` |
 | Port | порт брокера, обычно `1883` |
 | Username / Password | учётные данные брокера, если он их требует |
 | Discovery prefix | `homeassistant`, если не меняли его в настройках HA |
@@ -29,13 +30,15 @@ Storage Link публикует себя в Home Assistant через **MQTT Dis
 
 Настройки уходят прямо на прибор по локальной сети — портал их не хранит.
 
-<!-- СКРИНШОТ: блок «Интеграции» на портале и окно Home Assistant с полями -->
+![Окно Home Assistant в блоке «Интеграции» на портале](../../img/ha-portal-integration.png)
+*Адрес брокера, порт и признак «Включено» — всё, что нужно прибору.*
 
 ## Шаг 2. Найти устройство в Home Assistant
 
 `Settings` → `Devices & services` → карточка **MQTT** → в разделе **Services** разверните узел брокера. Приборы iDryer видны под серийными номерами вида `DEVICE_*`.
 
-<!-- СКРИНШОТ: устройство Storage Link на странице интеграции MQTT -->
+![Приборы iDryer на странице интеграции MQTT](../../img/ha-mqtt-devices.png)
+*Устройства под узлом брокера; у Storage видно число сущностей.*
 
 Откройте устройство: HA уже показывает показания и элементы управления лентой.
 
@@ -72,7 +75,7 @@ views:
         color: primary
     - type: tile
       entity: sensor.storage_temperature
-      name: Температура
+      name: Temperature
       visibility:
       - condition: state
         entity: sensor.storage_temperature
@@ -81,7 +84,7 @@ views:
         - unavailable
     - type: tile
       entity: sensor.storage_humidity
-      name: Влажность
+      name: Humidity
       visibility:
       - condition: state
         entity: sensor.storage_humidity
@@ -89,21 +92,21 @@ views:
         - unknown
         - unavailable
     - type: heading
-      heading: Лента
+      heading: LED strip
       heading_style: subtitle
     - type: tile
       entity: select.storage_turn_on_effect
-      name: Анимация
+      name: Effect
       features:
       - type: select-options
       features_position: bottom
     - type: tile
       entity: text.storage_turn_on_color
-      name: Цвет
+      name: Color
       icon: mdi:palette
     - type: tile
       entity: button.storage_turn_on
-      name: Включить
+      name: Turn on
       icon: mdi:led-strip-variant
       hide_state: true
       tap_action: &id001
@@ -114,7 +117,7 @@ views:
       icon_tap_action: *id001
     - type: tile
       entity: button.storage_turn_off
-      name: Выключить
+      name: Turn off
       icon: mdi:led-strip-variant-off
       hide_state: true
       tap_action: &id002
@@ -125,7 +128,8 @@ views:
       icon_tap_action: *id002
 ```
 
-<!-- СКРИНШОТ: Raw configuration editor со вставленной раскладкой -->
+![Raw configuration editor со вставленной раскладкой](../../img/ha-raw-editor.png)
+*Та же раскладка в редакторе конфигурации дашборда.*
 
 Цвет задаётся строкой в поле **Цвет** — шестизначный HEX без решётки, например `FF8800`. Анимация выбирается из списка, который прибор публикует сам: у старых прошивок Storage вариантов меньше.
 
